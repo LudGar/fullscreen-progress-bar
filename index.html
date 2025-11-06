@@ -22,7 +22,6 @@
       --field-bg-focus: rgba(255,255,255,0.10);
     }
 
-    /* Optional theme variants via [data-theme] */
     [data-theme="magenta"] { --accent:#ff2bd6; --accent-soft: rgba(255, 43, 214, 0.18); }
     [data-theme="amber"]   { --accent:#ff9f1c; --accent-soft: rgba(255,159,28,0.18); }
     [data-theme="lime"]    { --accent:#a6ff00; --accent-soft: rgba(166,255,0,0.2);  }
@@ -30,8 +29,7 @@
 
     html, body { height: 100%; }
     body {
-      margin: 0;
-      color: var(--text);
+      margin: 0; color: var(--text);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       background: radial-gradient(1200px 800px at 70% -10%, rgba(0, 224, 255, 0.07), transparent 60%),
                   radial-gradient(1000px 600px at 20% 120%, rgba(99, 179, 237, 0.05), transparent 60%),
@@ -39,9 +37,7 @@
       overflow: hidden;
     }
 
-    /* Subtle blueprint/circuit grid */
-    .grid-overlay {
-      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    .grid-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 0;
       background-image:
         linear-gradient(var(--scan), var(--scan)),
         repeating-linear-gradient(0deg, transparent 0 29px, var(--grid) 29px 30px),
@@ -49,120 +45,127 @@
       background-size: 100% 100%, 100% 100%, 100% 100%;
       -webkit-mask-image: radial-gradient(100% 100% at 50% 50%, rgba(0,0,0,0.9), rgba(0,0,0,0.3));
               mask-image: radial-gradient(100% 100% at 50% 50%, rgba(0,0,0,0.9), rgba(0,0,0,0.3));
-      animation: scan 6s linear infinite;
-    }
+      animation: scan 6s linear infinite; }
     @keyframes scan { 0% { background-position: 0 -20vh, 0 0, 0 0 } 100% { background-position: 0 80vh, 0 0, 0 0 } }
 
     .hud { position: fixed; inset: 4vmin; display: grid; place-items: center; z-index: 1; }
 
-    .panel {
-      width: min(1200px, 92vw);
-      padding: clamp(18px, 3vmin, 28px);
+    .panel { width: min(1200px, 92vw); padding: clamp(18px, 3vmin, 28px);
       background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: var(--radius);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
-      backdrop-filter: blur(6px) saturate(120%);
-    }
+      border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35); backdrop-filter: blur(6px) saturate(120%); }
 
-    .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; letter-spacing: 0.08em; text-transform: uppercase; font-size: clamp(12px, 1.5vmin, 14px); color: var(--muted); }
+    .panel-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;
+      letter-spacing: .08em; text-transform: uppercase; font-size: clamp(12px, 1.5vmin, 14px); color: var(--muted); }
 
-    .pill { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border-radius: 999px; padding: 6px 10px; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border-radius: 999px; padding: 6px 10px; }
 
     .accent-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: var(--shadow); }
 
-    /* Progress bar */
-    .bar-wrap { position: relative; height: clamp(16px, 2.6vmin, 22px); border-radius: 999px; overflow: clip; outline: 1px solid rgba(255,255,255,0.12); background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0)), repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 8px); }
-    .bar-bg { position: absolute; inset: 0; opacity: 0.25; background: linear-gradient(90deg, var(--accent-soft), transparent 45%); filter: blur(12px); }
-    .bar-fill { position: absolute; inset: 0; width: 0%; background: linear-gradient(90deg, var(--accent), #fff 120%); box-shadow: 0 0 10px var(--accent), 0 0 30px var(--accent); filter: saturate(120%); }
-    .bar-glow { position: absolute; inset: 0; width: 0%; background: radial-gradient(40px 40px at 100% 50%, rgba(255,255,255,0.35), transparent 60%), linear-gradient(90deg, var(--accent-soft), transparent 60%); mix-blend-mode: screen; opacity: 0.9; }
+    .bar-wrap { position: relative; height: clamp(16px, 2.6vmin, 22px); border-radius: 999px; overflow: clip;
+      outline: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0)),
+                  repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 8px); }
+    .bar-bg { position:absolute; inset:0; opacity:.25; background: linear-gradient(90deg, var(--accent-soft), transparent 45%); filter: blur(12px); }
+    .bar-fill { position:absolute; inset:0; width:0%; background: linear-gradient(90deg, var(--accent), #fff 120%); box-shadow: 0 0 10px var(--accent), 0 0 30px var(--accent); filter: saturate(120%); }
+    .bar-glow { position:absolute; inset:0; width:0%; background:
+        radial-gradient(40px 40px at 100% 50%, rgba(255,255,255,0.35), transparent 60%),
+        linear-gradient(90deg, var(--accent-soft), transparent 60%);
+      mix-blend-mode: screen; opacity: .9; }
 
-    .readout { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 12px; font-feature-settings: "tnum" 1, "ss01" 1; }
-    .percent { font-size: clamp(20px, 4vmin, 42px); letter-spacing: 0.02em; color: var(--text); text-shadow: 0 0 20px rgba(255,255,255,0.06); }
+    .readout { display:flex; align-items:baseline; justify-content:space-between; gap:14px; margin-top:12px; font-feature-settings: "tnum" 1, "ss01" 1; }
+    .percent { font-size: clamp(20px, 4vmin, 42px); letter-spacing: .02em; color: var(--text); text-shadow: 0 0 20px rgba(255,255,255,0.06); }
     .hint { color: var(--muted); font-size: clamp(11px, 1.5vmin, 13px); }
 
-    /* Floating marker */
-    .marker { position: absolute; top: 50%; translate: -50% -50%; width: clamp(10px, 1.5vmin, 12px); height: clamp(22px, 3vmin, 26px); border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05)); box-shadow: var(--shadow); display: grid; place-items: center; }
-    .marker::after { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .marker { position:absolute; top:50%; translate:-50% -50%; width: clamp(10px,1.5vmin,12px); height: clamp(22px,3vmin,26px);
+      border-radius:4px; border:1px solid rgba(255,255,255,0.3);
+      background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05)); box-shadow: var(--shadow); display:grid; place-items:center; }
+    .marker::after { content: ""; width:6px; height:6px; border-radius:999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
 
-    /* Corner HUD bits */
-    .corner { position: fixed; z-index: 2; color: var(--muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
-    .corner.tl { left: 2vmin; top: 2vmin; }
-    .corner.tr { right: 2vmin; top: 2vmin; }
-    .corner.bl { left: 2vmin; bottom: 2vmin; }
-    .corner.br { right: 2vmin; bottom: 2vmin; }
+    .corner { position: fixed; z-index: 2; color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    .corner.tl { left:2vmin; top:2vmin; } .corner.tr { right:2vmin; top:2vmin; }
+    .corner.bl { left:2vmin; bottom:2vmin; } .corner.br { right:2vmin; bottom:2vmin; }
     .kbd { border: 1px solid rgba(255,255,255,0.18); padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,0.05); }
 
-    /* Fullscreen + Clean buttons (auto-hide on pointer inactivity) */
-    .fs-btn, .clean-btn { position: fixed; z-index:3; border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); padding: 8px 12px; color: var(--text); cursor: pointer; opacity: 0.9; transition: opacity .25s ease, transform .2s ease; backdrop-filter: blur(6px) saturate(130%); }
+    .fs-btn, .clean-btn { position: fixed; z-index:3; border: 1px solid rgba(255,255,255,0.18); border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); padding: 8px 12px; color: var(--text);
+      cursor: pointer; opacity: .9; transition: opacity .25s ease, transform .2s ease; backdrop-filter: blur(6px) saturate(130%); }
     .fs-btn:hover, .clean-btn:hover { opacity: 1; transform: translateY(-2px); }
-    .fs-btn { right: 2vmin; bottom: 2vmin; }
-    .clean-btn { left: 2vmin; bottom: 2vmin; }
-    .auto-hide { opacity: 0; pointer-events: none; }
+    .fs-btn { right:2vmin; bottom:2vmin; } .clean-btn { left:2vmin; bottom:2vmin; }
+    .auto-hide { opacity:0; pointer-events:none; }
 
-    /* Settings drawer (outside the progress panel) */
-    .drawer {
-      position: fixed; top: 50%; right: 0; translate: 0 -50%; z-index: 3;
+    /* Drawer */
+    .drawer { position: fixed; top: 50%; right: 0; translate: 0 -50%; z-index: 3;
       width: min(420px, 90vw); max-height: 86vh; overflow: auto;
       background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-      border-left: 1px solid rgba(255,255,255,0.12);
-      border-top: 1px solid rgba(255,255,255,0.08);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      border-top-left-radius: 14px; border-bottom-left-radius: 14px;
-      padding: 14px; box-shadow: -20px 0 40px rgba(0,0,0,0.35);
-      backdrop-filter: blur(6px) saturate(120%);
-      transform: translateX(100%);
-      transition: transform .25s ease;
-    }
+      border-left: 1px solid rgba(255,255,255,0.12); border-top: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-top-left-radius: 14px; border-bottom-left-radius: 14px; padding: 14px;
+      box-shadow: -20px 0 40px rgba(0,0,0,0.35); backdrop-filter: blur(6px) saturate(120%);
+      transform: translateX(100%); transition: transform .25s ease; }
     .drawer.open { transform: translateX(0); }
-    .drawer .title { display:flex; align-items:center; justify-content:space-between; color:var(--muted-2); text-transform:uppercase; letter-spacing:0.08em; font-size:12px; margin-bottom:10px; }
+    .drawer .title { display:flex; align-items:center; justify-content:space-between; color:var(--muted-2); text-transform:uppercase; letter-spacing:.08em; font-size:12px; margin-bottom:10px; }
     .drawer .group { border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 10px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); margin-bottom: 10px; }
 
-    .drawer-handle {
-      position: fixed; top: 50%; right: 0; translate: 0 -50%; z-index: 3;
-      display: grid; place-items:center; gap:6px;
-      padding: 10px 10px; border-top-left-radius: 10px; border-bottom-left-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.18); border-right: none;
-      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
-      color: var(--text); cursor: pointer;
-      box-shadow: -12px 0 30px rgba(0,0,0,0.35);
-      backdrop-filter: blur(6px) saturate(130%);
-      user-select: none;
-    }
-    .drawer-handle .label { writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; color: var(--muted-2); }
+    .drawer-handle { position: fixed; top: 50%; right: 0; translate: 0 -50%; z-index: 3; display:grid; place-items:center; gap:6px;
+      padding: 10px 10px; border-top-left-radius: 10px; border-bottom-left-radius: 10px; border: 1px solid rgba(255,255,255,0.18); border-right:none;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)); color: var(--text); cursor: pointer;
+      box-shadow: -12px 0 30px rgba(0,0,0,0.35); backdrop-filter: blur(6px) saturate(130%);
+      user-select:none; }
+    .drawer-handle .label { writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: .08em; text-transform: uppercase; font-size: 11px; color: var(--muted-2); }
 
-    /* Form controls — force dark scheme and higher contrast */
+    /* Form controls */
     .control, .control input, .control button, .control select { font: inherit; color: var(--text); }
-    .control input[type="datetime-local"], .control input[type="number"], .control select {
+    .control input[type="datetime-local"], .control input[type="number"] {
       background: var(--field-bg); border: 1px solid var(--field-border); border-radius: 10px; padding: 8px 10px; color: var(--text);
-      color-scheme: dark; /* make native pickers dark where supported */
-      outline: none;
+      color-scheme: dark; outline: none;
     }
-    .control input[type="datetime-local"]:focus, .control input[type="number"]:focus, .control select:focus {
-      background: var(--field-bg-focus); border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(0,224,255,0.15);
-    }
-    /* WebKit datetime inner bits */
-    input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.85); }
-    input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper { color: var(--text); }
-    input[type="datetime-local"]::-webkit-datetime-edit, input[type="datetime-local"]::-webkit-datetime-edit-text, input[type="datetime-local"]::-webkit-datetime-edit-year-field, input[type="datetime-local"]::-webkit-datetime-edit-month-field, input[type="datetime-local"]::-webkit-datetime-edit-day-field, input[type="datetime-local"]::-webkit-datetime-edit-hour-field, input[type="datetime-local"]::-webkit-datetime-edit-minute-field { color: var(--text); }
+    .control input[type="datetime-local"]:focus, .control input[type="number"]:focus { background: var(--field-bg-focus); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,224,255,0.15); }
 
-    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    .tglbar { display: inline-flex; gap: 6px; padding: 4px; border-radius: 999px; border:1px solid rgba(255,255,255,0.12); background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); }
+    /* Dark mode for dropdowns and date/time pickers */
+    .control select,
+    .control input[type="datetime-local"],
+    .control input[type="date"],
+    .control input[type="time"] {
+      appearance: none; -webkit-appearance: none; -moz-appearance: none;
+      background: linear-gradient(180deg, #06090d, #090d12);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 10px 34px 10px 12px;
+      color: #cfeeff;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .control select:focus,
+    .control input[type="datetime-local"]:focus,
+    .control input[type="date"]:focus,
+    .control input[type="time"]:focus {
+      background: linear-gradient(180deg, #0a1016, #0c131a);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,224,255,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .control select option { background: #06090d; color: #cfeeff; }
+    .control select { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1.5L6 6.5L11 1.5' stroke='%23a6eaff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; background-size: 12px 8px; }
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.8) sepia(0.3) saturate(1.8) hue-rotate(180deg); opacity: 0.9; }
+    input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper,
+    input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+    input[type="time"]::-webkit-datetime-edit-fields-wrapper { color: #cfeeff; }
+
+    .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .tglbar { display:inline-flex; gap:6px; padding:4px; border-radius:999px; border:1px solid rgba(255,255,255,0.12); background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); }
     .tglbar label { padding: 6px 10px; border-radius: 999px; cursor: pointer; user-select: none; color: var(--muted); }
     .tglbar input { display:none; }
     .tglbar input:checked + span { color: var(--text); background: rgba(255,255,255,0.06); border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); }
 
-    .control button { border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)); padding: 8px 12px; cursor: pointer; color: var(--text); }
-    .control button:hover { box-shadow: 0 0 0 3px rgba(0,224,255,0.12); }
+    .control button, .btn-chip { border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)); padding: 8px 12px; cursor: pointer; color: var(--text); }
+    .control button:hover, .btn-chip:hover { box-shadow: 0 0 0 3px rgba(0,224,255,0.12); }
+    .control button:active, .btn-chip:active { transform: translateY(1px); }
 
-    /* Clean mode hides almost everything but the bar + tiny buttons */
     body.clean .corner, body.clean .panel-header, body.clean .readout { display: none !important; }
     body.clean .clean-btn { opacity: 0.5; }
-
-    /* Preset chips */
-    .btn-chip { border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; padding: 6px 10px; background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); color: var(--text); cursor: pointer; }
-    .btn-chip:hover { box-shadow: 0 0 0 3px rgba(0,224,255,0.12); }
   </style>
 </head>
 <body>
@@ -281,8 +284,7 @@
       const themeSelect = document.getElementById('themeSelect');
       const applyTheme = (t) => {
         document.documentElement.setAttribute('data-theme', t === 'cyan' ? '' : t);
-        themeNameEl.textContent = t;
-        themeSelect.value = t;
+        themeNameEl.textContent = t; themeSelect.value = t;
       };
       if (["cyan","magenta","amber","lime","violet"].includes(theme)) applyTheme(theme);
 
@@ -343,92 +345,57 @@
 
       // RAF loop
       function tick(now) {
-        const dt = Math.min(33, now - last) / 1000; // seconds
-        last = now;
-
-        // Mode-driven target
+        const dt = Math.min(33, now - last) / 1000; last = now;
         if (mode === MODES.COUNTDOWN) {
-          const p = countdownProgress();
-          if (!Number.isNaN(p)) target = clamp(p);
+          const p = countdownProgress(); if (!Number.isNaN(p)) target = clamp(p);
         } else if (mode === MODES.DURATION) {
-          const p = durationProgress();
-          if (p != null) target = clamp(p);
+          const p = durationProgress(); if (p != null) target = clamp(p);
         }
-
-        // Chaotic overrides (only when not countdown)
-        if (chaotic.checked && mode !== MODES.COUNTDOWN) {
-          chaoticTick(now);
-        }
-
-        const diff = target - progress;
-        const k = 10; // stiffness
-        const step = diff * (1 - Math.exp(-k * dt));
-        progress += step;
-        render();
-        requestAnimationFrame(tick);
+        if (chaotic.checked && mode !== MODES.COUNTDOWN) chaoticTick(now);
+        const diff = target - progress; const k = 10; const step = diff * (1 - Math.exp(-k * dt));
+        progress += step; render(); requestAnimationFrame(tick);
       }
 
-      // Chaotic logic
       let nextChaosAt = 0;
       function chaoticTick(now) {
-        if (now >= nextChaosAt) {
-          target = Math.random() * 100;
-          nextChaosAt = now + (400 + Math.random() * 1200);
-        }
+        if (now >= nextChaosAt) { target = Math.random() * 100; nextChaosAt = now + (400 + Math.random() * 1200); }
       }
 
       function countdownProgress() {
         const s = startAt.value ? new Date(startAt.value) : null;
         const e = endAt.value ? new Date(endAt.value) : null;
         if (!s || !e || isNaN(s) || isNaN(e) || e <= s) return NaN;
-        const now = new Date();
-        const total = e - s;
-        const elapsed = now - s;
-        const p = (elapsed / total) * 100;
-        // Update hint with remaining
-        const remaining = e - now;
+        const now = new Date(); const total = e - s; const elapsed = now - s;
+        const p = (elapsed / total) * 100; const remaining = e - now;
         hint.textContent = remaining > 0 ? formatRemaining(remaining) + ' remaining' : 'Completed';
         return p;
       }
 
       function durationProgress() {
-        const d = Math.max(1, parseFloat(durationSec.value||'0')) * 1000; // ms
-        if (!durStartTime) return null; // not started
-        const now = performance.now();
-        const elapsed = now - durStartTime;
+        const d = Math.max(1, parseFloat(durationSec.value||'0')) * 1000;
+        if (!durStartTime) return null; const now = performance.now(); const elapsed = now - durStartTime;
         hint.textContent = formatRemaining(Math.max(0, d - elapsed)) + ' remaining';
         return (elapsed / d) * 100;
       }
 
       function render() {
         const p = clamp(progress, 0, 100);
-        barFill.style.width = p + '%';
-        barGlow.style.width = Math.max(0, p - 0.2) + '%';
-        marker.style.left = p + '%';
-        percentEl.textContent = Math.round(p) + '%';
-        statusEl.textContent = auto ? 'auto' : mode;
+        barFill.style.width = p + '%'; barGlow.style.width = Math.max(0, p - 0.2) + '%'; marker.style.left = p + '%';
+        percentEl.textContent = Math.round(p) + '%'; statusEl.textContent = auto ? 'auto' : mode;
       }
 
       function clamp(v, min=0, max=100) { return Math.max(min, Math.min(max, v)); }
 
       function setMode(m) {
-        mode = m;
-        modeEl.textContent = 'Mode: ' + m.charAt(0).toUpperCase() + m.slice(1);
+        mode = m; modeEl.textContent = 'Mode: ' + m.charAt(0).toUpperCase() + m.slice(1);
         countdownFields.style.display = (m === MODES.COUNTDOWN) ? 'block' : 'none';
         durationFields.style.display = (m === MODES.DURATION) ? 'block' : 'none';
       }
 
       function formatRemaining(ms) {
-        const s = Math.ceil(ms/1000);
-        const d = Math.floor(s / 86400);
-        const h = Math.floor((s % 86400) / 3600);
-        const m = Math.floor((s % 3600) / 60);
-        const sec = s % 60;
-        const parts = [];
-        if (d) parts.push(d + 'd');
-        if (h || d) parts.push(h + 'h');
-        if (m || h || d) parts.push(m + 'm');
-        parts.push(sec + 's');
+        const s = Math.ceil(ms/1000); const d = Math.floor(s / 86400);
+        const h = Math.floor((s % 86400) / 3600); const m = Math.floor((s % 3600) / 60); const sec = s % 60;
+        const parts = []; if (d) parts.push(d + 'd'); if (h || d) parts.push(h + 'h'); if (m || h || d) parts.push(m + 'm'); parts.push(sec + 's');
         return parts.join(' ');
       }
 
@@ -443,19 +410,12 @@
         resetDuration: () => { durStartTime = null; },
       };
 
-      // Auto mode loop (legacy ping-pong if manual + not chaotic)
       setInterval(() => {
         if (!auto || mode !== MODES.MANUAL || chaotic.checked) return;
-        if (Math.abs(target - progress) < 0.5) {
-          const next = (target > 50) ? 0 : 100;
-          target = next;
-        }
+        if (Math.abs(target - progress) < 0.5) target = (target > 50) ? 0 : 100;
       }, 800);
 
-      // Interaction
-      wrap.addEventListener('click', () => {
-        if (mode === MODES.MANUAL) { auto = !auto; }
-      });
+      wrap.addEventListener('click', () => { if (mode === MODES.MANUAL) { auto = !auto; } });
       window.addEventListener('keydown', (e) => {
         if (e.code === 'Space') { e.preventDefault(); auto = !auto; return; }
         const step = e.shiftKey ? 5 : 1;
@@ -463,19 +423,12 @@
         if (e.key === 'ArrowLeft')  { target = clamp(target - step); setMode(MODES.MANUAL); auto = false; }
       });
 
-      modeBar.addEventListener('change', (e) => {
-        if (e.target.name === 'mode') setMode(e.target.value);
-      });
+      modeBar.addEventListener('change', (e) => { if (e.target.name === 'mode') setMode(e.target.value); });
       durStartBtn.addEventListener('click', () => { durStartTime = performance.now(); setMode(MODES.DURATION); });
       durResetBtn.addEventListener('click', () => { durStartTime = null; progress = 0; target = 0; render(); });
 
-      // Quick: Countdown
-      qStartNow.addEventListener('click', () => {
-        startAt.value = toLocalISO(new Date());
-      });
-      qNowToCurrentEnd.addEventListener('click', () => {
-        if (endAt.value) startAt.value = toLocalISO(new Date());
-      });
+      qStartNow.addEventListener('click', () => { startAt.value = toLocalISO(new Date()); });
+      qNowToCurrentEnd.addEventListener('click', () => { if (endAt.value) startAt.value = toLocalISO(new Date()); });
       countdownFields.querySelectorAll('[data-end]').forEach(btn => {
         btn.addEventListener('click', () => {
           const secs = parseInt(btn.getAttribute('data-end'), 10);
@@ -485,77 +438,49 @@
         });
       });
 
-      // Quick: Duration presets
       durationFields.querySelectorAll('[data-dur]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          durationSec.value = btn.getAttribute('data-dur');
-        });
+        btn.addEventListener('click', () => { durationSec.value = btn.getAttribute('data-dur'); });
       });
 
-      // Fullscreen toggle
       fsBtn.addEventListener('click', async () => {
-        try {
-          if (!document.fullscreenElement) {
-            await document.documentElement.requestFullscreen();
-            fsBtn.textContent = '⤢ Exit Fullscreen';
-          } else {
-            await document.exitFullscreen();
-            fsBtn.textContent = '⤢ Fullscreen';
-          }
-        } catch (err) { console.warn(err); }
+        try { if (!document.fullscreenElement) { await document.documentElement.requestFullscreen(); fsBtn.textContent = '⤢ Exit Fullscreen'; }
+              else { await document.exitFullscreen(); fsBtn.textContent = '⤢ Fullscreen'; } }
+        catch (err) { console.warn(err); }
       });
 
-      // Clean toggle
       cleanBtn.addEventListener('click', () => {
         document.body.classList.toggle('clean');
         cleanBtn.textContent = document.body.classList.contains('clean') ? '🧹 Show UI' : '🧹 Clean UI';
       });
 
-      // Auto-hide buttons on inactivity (handle + buttons)
-      let hideTimer;
-      const floats = [fsBtn, cleanBtn, drawerHandle];
-      const showBtn = () => { floats.forEach(b=>b.classList.remove('auto-hide')); clearTimeout(hideTimer); hideTimer = setTimeout(() => floats.forEach(b=>b.classList.add('auto-hide')), 1800); };
+      let hideTimer; const floats = [fsBtn, cleanBtn, drawerHandle];
+      const showBtn = () => { floats.forEach(b=>b.classList.remove('auto-hide')); clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => floats.forEach(b=>b.classList.add('auto-hide')), 1800); };
       window.addEventListener('mousemove', showBtn);
-      window.addEventListener('touchstart', showBtn, {passive:true});
-      showBtn();
+      window.addEventListener('touchstart', showBtn, {passive:true}); showBtn();
 
       // Init
-      setMode(mode); // ensure fields visibility
-      let raf = requestAnimationFrame(tick);
-      target = progress;
-      render();
+      setMode(mode); target = progress; render(); requestAnimationFrame(tick);
 
-      // ======= Self-tests (basic) =======
+      // ======= Self-tests =======
       (function runSelfTests(){
         try {
           console.group('%cNeo HUD — Self-tests','color:#0ff');
           console.assert(clamp(-10) === 0 && clamp(150) === 100, 'clamp bounds');
           const iso = toLocalISO(new Date());
-          console.assert(/T\d{2}:\d{2}$/.test(iso), 'toLocalISO format');
-          // Countdown sample
-          const now = new Date();
-          const s = new Date(now.getTime()-1000*10);
-          const e = new Date(now.getTime()+1000*10);
-          startAt.value = toLocalISO(s);
-          endAt.value = toLocalISO(e);
-          setMode(MODES.COUNTDOWN);
-          const cp = countdownProgress();
-          console.assert(!Number.isNaN(cp) && cp >= 0 && cp <= 100, 'countdownProgress in range');
-          // Duration sample
-          durationSec.value = 2;
-          progressBar.startDuration();
-          setTimeout(()=>{ console.assert(progressBar.get() >= 0, 'duration progress running'); console.groupEnd(); }, 10);
+          const timePart = iso.split('T')[1] || '';
+          console.assert(timePart.includes(':'), 'toLocalISO basic shape');
+          const now = new Date(); const s = new Date(now.getTime()-1000*10); const e = new Date(now.getTime()+1000*10);
+          startAt.value = toLocalISO(s); endAt.value = toLocalISO(e); setMode(MODES.COUNTDOWN);
+          const cp = countdownProgress(); console.assert(!Number.isNaN(cp) && cp >= 0 && cp <= 100, 'countdownProgress in range');
+          durationSec.value = 2; progressBar.startDuration(); setTimeout(()=>{ console.assert(progressBar.get() >= 0, 'duration progress running'); console.groupEnd(); }, 10);
         } catch(err){ console.warn('Self-tests error', err); }
       })();
 
-      // Helpers
       function toLocalISO(d) {
         const pad = (n)=> String(n).padStart(2,'0');
-        const y = d.getFullYear();
-        const mo = pad(d.getMonth()+1);
-        const da = pad(d.getDate());
-        const h = pad(d.getHours());
-        const mi = pad(d.getMinutes());
+        const y = d.getFullYear(); const mo = pad(d.getMonth()+1); const da = pad(d.getDate());
+        const h = pad(d.getHours()); const mi = pad(d.getMinutes());
         return `${y}-${mo}-${da}T${h}:${mi}`;
       }
     })();
