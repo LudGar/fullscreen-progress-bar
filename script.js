@@ -1,5 +1,5 @@
 /* =========================================================
-   Neo HUD — script.js (URL sync enabled, init-safe)
+   Neo HUD — script.js (mode-aware URL + init-safe)
    Interactivity, timers, theme switching, drawer & tests
    ========================================================= */
 
@@ -9,26 +9,40 @@
   var initReady = false;       // becomes true after state/DOM wired
 
   function queueURLSync() {
-    if (!initReady) return;            // don't sync until app is ready
+    if (!initReady) return; // don't sync until app is ready
     clearTimeout(urlSyncTimer);
     urlSyncTimer = setTimeout(syncURLFromState, 250);
   }
 
+  // Build a minimal URL that only includes the active mode's needed params
   function syncURLFromState() {
-    if (!initReady) return;            // extra guard
+    if (!initReady) return;
 
-    const p = Math.round(target);
     const params = new URLSearchParams();
 
-    params.set('progress', String(p));
+    // always persist theme + mode
     params.set('theme', themeSelect.value);
     params.set('mode', mode);
-    if (startAt.value) params.set('start', startAt.value);
-    if (endAt.value)   params.set('end', endAt.value);
-    params.set('chaotic', chaotic.checked ? '1' : '0');
 
-    const d = parseFloat(durationSec.value);
-    if (!Number.isNaN(d) && d > 0) params.set('duration', String(d));
+    switch (mode) {
+      case MODES.MANUAL: {
+        const p = Math.round(target);
+        params.set('progress', String(p));
+        // only include chaotic if it's on (only relevant outside countdown)
+        if (chaotic.checked) params.set('chaotic', '1');
+        break;
+      }
+      case MODES.COUNTDOWN: {
+        if (startAt.value) params.set('start', startAt.value);
+        if (endAt.value)   params.set('end', endAt.value);
+        break;
+      }
+      case MODES.DURATION: {
+        const d = parseFloat(durationSec.value);
+        if (!Number.isNaN(d) && d > 0) params.set('duration', String(d));
+        break;
+      }
+    }
 
     const newUrl = `${location.pathname}?${params.toString()}`;
     history.replaceState(null, '', newUrl);
@@ -39,7 +53,9 @@
   // ---------- 1) QS + initial
   const qs = new URLSearchParams(location.search);
   const theme     = (qs.get('theme')||'cyan').toLowerCase();
-  const qsMode    = (qs.get('mode') ||'manual').toLowerCase();
+
+  // read explicit mode (if any)
+  let qsMode = (qs.get('mode') || '').toLowerCase();
   const qsStart   = qs.get('start');
   const qsEnd     = qs.get('end');
   const qsChaotic = qs.get('chaotic');
@@ -78,14 +94,13 @@
 
   // NEW: Share / URL
   const urlExample = document.getElementById('urlExample');
-  const copyUrlBtn = document.getElementById('copyUrl');
 
   // ---------- 3) Theme init
   const applyTheme = (t) => {
     document.documentElement.setAttribute('data-theme', t === 'cyan' ? '' : t);
     themeNameEl.textContent = t;
     themeSelect.value = t;
-    queueURLSync(); // safe: guarded by initReady
+    queueURLSync(); // guarded by initReady
   };
   if (["cyan","magenta","amber","lime","violet"].includes(theme)) applyTheme(theme);
   themeSelect.addEventListener('change', (e)=> applyTheme(e.target.value));
@@ -101,16 +116,26 @@
 
   let durStartTime = null;
 
-  // ---------- 5) QS → UI
-  if (["manual","countdown","duration"].includes(qsMode)) {
-    setMode(qsMode);
-    const radio = modeBar.querySelector(`input[value="${qsMode}"]`);
-    if (radio) radio.checked = true;
+  // ---------- 5) Infer mode if needed, apply QS → UI, and ensure radio reflects it
+  // If no valid mode provided, infer from params.
+  if (!["manual","countdown","duration"].includes(qsMode)) {
+    if (qsStart || qsEnd) qsMode = MODES.COUNTDOWN;
+    else if (!isNaN(qsDuration)) qsMode = MODES.DURATION;
+    else qsMode = MODES.MANUAL;
   }
+
+  setMode(qsMode);
+  const radio = modeBar.querySelector(`input[value="${qsMode}"]`);
+  if (radio) radio.checked = true;
+
+  // Fill fields from URL
   if (qsStart) startAt.value = qsStart;
   if (qsEnd)   endAt.value   = qsEnd;
   if (!isNaN(qsDuration)) durationSec.value = Math.max(1, qsDuration);
   if (qsChaotic === '1' || qsChaotic === 'true') chaotic.checked = true;
+
+  // For manual mode, honor initial progress; otherwise ignore manual progress param.
+  if (qsMode !== MODES.MANUAL) { progress = 0; target = 0; }
 
   // ---------- 6) Drawer + Buttons
   drawerHandle.addEventListener('click', () => drawer.classList.toggle('open'));
@@ -236,9 +261,14 @@
   }
 
   function setMode(m) {
-    mode = m; modeEl.textContent = 'Mode: ' + m.charAt(0).toUpperCase() + m.slice(1);
+    mode = m;
+    modeEl.textContent = 'Mode: ' + m.charAt(0).toUpperCase() + m.slice(1);
     countdownFields.style.display = (m === MODES.COUNTDOWN) ? 'block' : 'none';
     durationFields.style.display  = (m === MODES.DURATION)  ? 'block' : 'none';
+
+    // ensure the radio matches the programmatic change
+    const r = modeBar.querySelector(`input[value="${m}"]`);
+    if (r) r.checked = true;
   }
 
   function render() {
@@ -254,18 +284,25 @@
   function clamp(v, min=0, max=100) { return Math.max(min, Math.min(max, v)); }
 
   function formatRemaining(ms) {
-    const s = Math.ceil(ms/1000); const d = Math.floor(s / 86400);
-    const h = Math.floor((s % 86400) / 3600); const m = Math.floor((s % 3600) / 60); const sec = s % 60;
-    const parts = []; if (d) parts.push(d + 'd'); if (h || d) parts.push(h + 'h'); if (m || h || d) parts.push(m + 'm'); parts.push(sec + 's');
+    const s = Math.ceil(ms/1000);
+    const d = Math.floor(s / 86400);
+    const h = Math.floor((s % 86400) / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    const parts = [];
+    if (d) parts.push(d + 'd');
+    if (h || d) parts.push(h + 'h');
+    if (m || h || d) parts.push(m + 'm');
+    parts.push(sec + 's');
     return parts.join(' ');
   }
 
-   function toLocalISO(d) {
-     const pad = (n)=> String(n).padStart(2,'0');
-     const y = d.getFullYear(), mo = pad(d.getMonth()+1), da = pad(d.getDate());
-     const h = pad(d.getHours()), mi = pad(d.getMinutes()), s = pad(d.getSeconds());
-     return `${y}-${mo}-${da}T${h}:${mi}:${s}`;
-   }
+  function toLocalISO(d) {
+    const pad = (n)=> String(n).padStart(2,'0');
+    const y = d.getFullYear(); const mo = pad(d.getMonth()+1); const da = pad(d.getDate());
+    const h = pad(d.getHours()); const mi = pad(d.getMinutes());
+    return `${y}-${mo}-${da}T${h}:${mi}`;
+  }
 
   // ---------- 9) Public API
   window.progressBar = {
@@ -279,8 +316,8 @@
     MODES
   };
 
-  // ---------- 10) Init + tests
-  setMode(mode);
+  // ---------- 10) Init + tests (safe)
+  setMode(mode);           // default manual, will be overwritten by qsMode above
   target = progress;
   render();
   requestAnimationFrame(tick);
@@ -289,35 +326,28 @@
   initReady = true;
   queueURLSync();
 
-   (function runSelfTests(){
-     try {
-       console.group('%cNeo HUD — Self-tests','color:#0ff');
-       console.assert(clamp(-10) === 0 && clamp(150) === 100, 'clamp bounds');
-   
-       const iso = toLocalISO(new Date());
-       const timePart = iso.split('T')[1] || '';
-       console.assert(timePart.includes(':'), 'toLocalISO basic shape');
-   
-       // Use a wide window so minute truncation can't collapse start/end
-       const now = new Date();
-       const s = new Date(now.getTime() - 1000 * 30);  // now - 30s
-       const e = new Date(now.getTime() + 1000 * 90);  // now + 90s (=> at least +1 minute)
-   
-       startAt.value = toLocalISO(s);
-       endAt.value   = toLocalISO(e);
-       setMode(MODES.COUNTDOWN);
-   
-       const cp = countdownProgress();
-       console.assert(!Number.isNaN(cp) && cp >= 0 && cp <= 100, 'countdown in range');
-   
-       durationSec.value = 2;
-       window.progressBar.startDuration();
-       setTimeout(() => {
-         console.assert(window.progressBar.get() >= 0, 'duration running');
-         console.groupEnd();
-       }, 10);
-     } catch(err){
-       console.warn('Self-tests error', err);
-     }
-   })();
+  // Self-tests (wider window to avoid minute truncation)
+  (function runSelfTests(){
+    try {
+      console.group('%cNeo HUD — Self-tests','color:#0ff');
+      console.assert(clamp(-10) === 0 && clamp(150) === 100, 'clamp bounds');
+
+      const iso = toLocalISO(new Date());
+      const timePart = iso.split('T')[1] || '';
+      console.assert(timePart.includes(':'), 'toLocalISO basic shape');
+
+      const now = new Date();
+      const s = new Date(now.getTime() - 1000*30);  // now - 30s
+      const e = new Date(now.getTime() + 1000*90);  // now + 90s
+      startAt.value = toLocalISO(s);
+      endAt.value   = toLocalISO(e);
+      setMode(MODES.COUNTDOWN);
+      const cp = countdownProgress();
+      console.assert(!Number.isNaN(cp) && cp >= 0 && cp <= 100, 'countdown in range');
+
+      durationSec.value = 2;
+      window.progressBar.startDuration();
+      setTimeout(()=>{ console.assert(window.progressBar.get() >= 0, 'duration running'); console.groupEnd(); }, 10);
+    } catch(err){ console.warn('Self-tests error', err); }
+  })();
 })();
