@@ -260,12 +260,12 @@
     return parts.join(' ');
   }
 
-  function toLocalISO(d) {
-    const pad = (n)=> String(n).padStart(2,'0');
-    const y = d.getFullYear(); const mo = pad(d.getMonth()+1); const da = pad(d.getDate());
-    const h = pad(d.getHours()); const mi = pad(d.getMinutes());
-    return `${y}-${mo}-${da}T${h}:${mi}`;
-  }
+   function toLocalISO(d) {
+     const pad = (n)=> String(n).padStart(2,'0');
+     const y = d.getFullYear(), mo = pad(d.getMonth()+1), da = pad(d.getDate());
+     const h = pad(d.getHours()), mi = pad(d.getMinutes()), s = pad(d.getSeconds());
+     return `${y}-${mo}-${da}T${h}:${mi}:${s}`;
+   }
 
   // ---------- 9) Public API
   window.progressBar = {
