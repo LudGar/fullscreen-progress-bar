@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Neo HUD — Fullscreen Progress</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --bg-2: #0e131a;
+      --grid: rgba(255,255,255,0.03);
+      --scan: rgba(255,255,255,0.05);
+      --accent: #00e0ff; /* default cyan */
+      --accent-soft: rgba(0, 224, 255, 0.2);
+      --text: #dbe7ff;
+      --muted: #8ea0b8;
+      --muted-2: #a7b6cc;
+      --shadow: 0 0 40px rgba(0, 224, 255, 0.1), 0 0 12px rgba(0, 224, 255, 0.2);
+      --radius: 18px;
+      --field-bg: rgba(255,255,255,0.06);
+      --field-border: rgba(255,255,255,0.14);
+      --field-bg-focus: rgba(255,255,255,0.10);
+    }
+
+    /* Optional theme variants via [data-theme] */
+    [data-theme="magenta"] { --accent:#ff2bd6; --accent-soft: rgba(255, 43, 214, 0.18); }
+    [data-theme="amber"]   { --accent:#ff9f1c; --accent-soft: rgba(255,159,28,0.18); }
+    [data-theme="lime"]    { --accent:#a6ff00; --accent-soft: rgba(166,255,0,0.2);  }
+    [data-theme="violet"]  { --accent:#7b61ff; --accent-soft: rgba(123,97,255,0.2); }
+
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: radial-gradient(1200px 800px at 70% -10%, rgba(0, 224, 255, 0.07), transparent 60%),
+                  radial-gradient(1000px 600px at 20% 120%, rgba(99, 179, 237, 0.05), transparent 60%),
+                  linear-gradient(180deg, var(--bg), var(--bg-2));
+      overflow: hidden;
+    }
+
+    /* Subtle blueprint/circuit grid */
+    .grid-overlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(var(--scan), var(--scan)),
+        repeating-linear-gradient(0deg, transparent 0 29px, var(--grid) 29px 30px),
+        repeating-linear-gradient(90deg, transparent 0 29px, var(--grid) 29px 30px);
+      background-size: 100% 100%, 100% 100%, 100% 100%;
+      -webkit-mask-image: radial-gradient(100% 100% at 50% 50%, rgba(0,0,0,0.9), rgba(0,0,0,0.3));
+              mask-image: radial-gradient(100% 100% at 50% 50%, rgba(0,0,0,0.9), rgba(0,0,0,0.3));
+      animation: scan 6s linear infinite;
+    }
+    @keyframes scan { 0% { background-position: 0 -20vh, 0 0, 0 0 } 100% { background-position: 0 80vh, 0 0, 0 0 } }
+
+    .hud { position: fixed; inset: 4vmin; display: grid; place-items: center; z-index: 1; }
+
+    .panel {
+      width: min(1200px, 92vw);
+      padding: clamp(18px, 3vmin, 28px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px) saturate(120%);
+    }
+
+    .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; letter-spacing: 0.08em; text-transform: uppercase; font-size: clamp(12px, 1.5vmin, 14px); color: var(--muted); }
+
+    .pill { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border-radius: 999px; padding: 6px 10px; }
+
+    .accent-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: var(--shadow); }
+
+    /* Progress bar */
+    .bar-wrap { position: relative; height: clamp(16px, 2.6vmin, 22px); border-radius: 999px; overflow: clip; outline: 1px solid rgba(255,255,255,0.12); background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0)), repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 8px); }
+    .bar-bg { position: absolute; inset: 0; opacity: 0.25; background: linear-gradient(90deg, var(--accent-soft), transparent 45%); filter: blur(12px); }
+    .bar-fill { position: absolute; inset: 0; width: 0%; background: linear-gradient(90deg, var(--accent), #fff 120%); box-shadow: 0 0 10px var(--accent), 0 0 30px var(--accent); filter: saturate(120%); }
+    .bar-glow { position: absolute; inset: 0; width: 0%; background: radial-gradient(40px 40px at 100% 50%, rgba(255,255,255,0.35), transparent 60%), linear-gradient(90deg, var(--accent-soft), transparent 60%); mix-blend-mode: screen; opacity: 0.9; }
+
+    .readout { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 12px; font-feature-settings: "tnum" 1, "ss01" 1; }
+    .percent { font-size: clamp(20px, 4vmin, 42px); letter-spacing: 0.02em; color: var(--text); text-shadow: 0 0 20px rgba(255,255,255,0.06); }
+    .hint { color: var(--muted); font-size: clamp(11px, 1.5vmin, 13px); }
+
+    /* Floating marker */
+    .marker { position: absolute; top: 50%; translate: -50% -50%; width: clamp(10px, 1.5vmin, 12px); height: clamp(22px, 3vmin, 26px); border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05)); box-shadow: var(--shadow); display: grid; place-items: center; }
+    .marker::after { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+
+    /* Corner HUD bits */
+    .corner { position: fixed; z-index: 2; color: var(--muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .corner.tl { left: 2vmin; top: 2vmin; }
+    .corner.tr { right: 2vmin; top: 2vmin; }
+    .corner.bl { left: 2vmin; bottom: 2vmin; }
+    .corner.br { right: 2vmin; bottom: 2vmin; }
+    .kbd { border: 1px solid rgba(255,255,255,0.18); padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,0.05); }
+
+    /* Fullscreen + Clean buttons (auto-hide on pointer inactivity) */
+    .fs-btn, .clean-btn { position: fixed; z-index:3; border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); padding: 8px 12px; color: var(--text); cursor: pointer; opacity: 0.9; transition: opacity .25s ease, transform .2s ease; backdrop-filter: blur(6px) saturate(130%); }
+    .fs-btn:hover, .clean-btn:hover { opacity: 1; transform: translateY(-2px); }
+    .fs-btn { right: 2vmin; bottom: 2vmin; }
+    .clean-btn { left: 2vmin; bottom: 2vmin; }
+    .auto-hide { opacity: 0; pointer-events: none; }
+
+    /* Settings drawer (outside the progress panel) */
+    .drawer {
+      position: fixed; top: 50%; right: 0; translate: 0 -50%; z-index: 3;
+      width: min(420px, 90vw); max-height: 86vh; overflow: auto;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border-left: 1px solid rgba(255,255,255,0.12);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-top-left-radius: 14px; border-bottom-left-radius: 14px;
+      padding: 14px; box-shadow: -20px 0 40px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px) saturate(120%);
+      transform: translateX(100%);
+      transition: transform .25s ease;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer .title { display:flex; align-items:center; justify-content:space-between; color:var(--muted-2); text-transform:uppercase; letter-spacing:0.08em; font-size:12px; margin-bottom:10px; }
+    .drawer .group { border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 10px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); margin-bottom: 10px; }
+
+    .drawer-handle {
+      position: fixed; top: 50%; right: 0; translate: 0 -50%; z-index: 3;
+      display: grid; place-items:center; gap:6px;
+      padding: 10px 10px; border-top-left-radius: 10px; border-bottom-left-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.18); border-right: none;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+      color: var(--text); cursor: pointer;
+      box-shadow: -12px 0 30px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px) saturate(130%);
+      user-select: none;
+    }
+    .drawer-handle .label { writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; color: var(--muted-2); }
+
+    /* Form controls — force dark scheme and higher contrast */
+    .control, .control input, .control button, .control select { font: inherit; color: var(--text); }
+    .control input[type="datetime-local"], .control input[type="number"], .control select {
+      background: var(--field-bg); border: 1px solid var(--field-border); border-radius: 10px; padding: 8px 10px; color: var(--text);
+      color-scheme: dark; /* make native pickers dark where supported */
+      outline: none;
+    }
+    .control input[type="datetime-local"]:focus, .control input[type="number"]:focus, .control select:focus {
+      background: var(--field-bg-focus); border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,224,255,0.15);
+    }
+    /* WebKit datetime inner bits */
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.85); }
+    input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper { color: var(--text); }
+    input[type="datetime-local"]::-webkit-datetime-edit, input[type="datetime-local"]::-webkit-datetime-edit-text, input[type="datetime-local"]::-webkit-datetime-edit-year-field, input[type="datetime-local"]::-webkit-datetime-edit-month-field, input[type="datetime-local"]::-webkit-datetime-edit-day-field, input[type="datetime-local"]::-webkit-datetime-edit-hour-field, input[type="datetime-local"]::-webkit-datetime-edit-minute-field { color: var(--text); }
+
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .tglbar { display: inline-flex; gap: 6px; padding: 4px; border-radius: 999px; border:1px solid rgba(255,255,255,0.12); background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); }
+    .tglbar label { padding: 6px 10px; border-radius: 999px; cursor: pointer; user-select: none; color: var(--muted); }
+    .tglbar input { display:none; }
+    .tglbar input:checked + span { color: var(--text); background: rgba(255,255,255,0.06); border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); }
+
+    .control button { border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)); padding: 8px 12px; cursor: pointer; color: var(--text); }
+    .control button:hover { box-shadow: 0 0 0 3px rgba(0,224,255,0.12); }
+
+    /* Clean mode hides almost everything but the bar + tiny buttons */
+    body.clean .corner, body.clean .panel-header, body.clean .readout { display: none !important; }
+    body.clean .clean-btn { opacity: 0.5; }
+
+    /* Preset chips */
+    .btn-chip { border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; padding: 6px 10px; background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); color: var(--text); cursor: pointer; }
+    .btn-chip:hover { box-shadow: 0 0 0 3px rgba(0,224,255,0.12); }
+  </style>
+</head>
+<body>
+  <div class="grid-overlay"></div>
+
+  <div class="corner tl">neo hud // progress</div>
+  <div class="corner tr" id="themeLabel">theme: <span class="kbd" id="themeName">cyan</span></div>
+  <div class="corner bl">keys: <span class="kbd">←/→</span> ±1% &nbsp; <span class="kbd">Shift</span> for ±5% &nbsp; <span class="kbd">Space</span> pause</div>
+  <div class="corner br" id="status">status: <span class="kbd">ready</span></div>
+
+  <div class="hud">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="pill"><span class="accent-dot"></span> Progress Channel</span>
+        <span class="pill" id="mode">Mode: Manual</span>
+      </div>
+
+      <div class="bar-wrap" id="barWrap">
+        <div class="bar-bg"></div>
+        <div class="bar-fill" id="barFill"></div>
+        <div class="bar-glow" id="barGlow"></div>
+        <div class="marker" id="marker" style="left:0%"></div>
+      </div>
+
+      <div class="readout">
+        <div class="percent" id="percent">0%</div>
+        <div class="hint" id="hint">Click to toggle auto. URL: <code>?progress=75&theme=violet&mode=countdown&start=2025-01-01T00:00&end=2025-12-31T23:59</code></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings drawer (outside bar) -->
+  <div class="drawer" id="drawer">
+    <div class="title"><span>Settings</span><span class="pill">UI</span></div>
+
+    <div class="group">
+      <div class="row tglbar control" id="modeBar">
+        <label><input type="radio" name="mode" value="manual" checked><span>Manual</span></label>
+        <label><input type="radio" name="mode" value="countdown"><span>Countdown</span></label>
+        <label><input type="radio" name="mode" value="duration"><span>Duration</span></label>
+      </div>
+      <label class="pill control" title="Chaotic target jumps when not using Countdown" style="margin-top:8px; display:inline-flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="chaotic"> <span>Chaotic</span>
+      </label>
+    </div>
+
+    <div class="group" id="countdownFields">
+      <div class="row" style="gap:8px;">
+        <span class="pill">Start</span>
+        <input class="control" type="datetime-local" id="startAt">
+      </div>
+      <div class="row" style="gap:8px; margin-top:8px;">
+        <span class="pill">End</span>
+        <input class="control" type="datetime-local" id="endAt">
+      </div>
+      <div class="row" style="gap:8px; margin-top:10px;">
+        <span class="pill">Quick</span>
+        <button class="btn-chip" id="qStartNow">Start = Now</button>
+        <button class="btn-chip" data-end="3600">End +1h</button>
+        <button class="btn-chip" data-end="86400">+24h</button>
+        <button class="btn-chip" data-end="604800">+7d</button>
+        <button class="btn-chip" id="qNowToCurrentEnd">Now → End</button>
+      </div>
+    </div>
+
+    <div class="group" id="durationFields">
+      <div class="row" style="gap:8px;">
+        <span class="pill">Duration (s)</span>
+        <input class="control" type="number" id="durationSec" min="1" value="60">
+        <button class="control" id="durStart">Start</button>
+        <button class="control" id="durReset">Reset</button>
+      </div>
+      <div class="row" style="gap:8px; margin-top:10px;">
+        <span class="pill">Presets</span>
+        <button class="btn-chip" data-dur="30">30s</button>
+        <button class="btn-chip" data-dur="60">1m</button>
+        <button class="btn-chip" data-dur="300">5m</button>
+        <button class="btn-chip" data-dur="600">10m</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="row" style="gap:8px;">
+        <span class="pill">Theme</span>
+        <select class="control" id="themeSelect">
+          <option value="cyan">Cyan</option>
+          <option value="magenta">Magenta</option>
+          <option value="amber">Amber</option>
+          <option value="lime">Lime</option>
+          <option value="violet">Violet</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-handle" id="drawerHandle" title="Settings">
+    ⚙
+    <span class="label">Settings</span>
+  </div>
+
+  <button class="fs-btn" id="fsBtn" title="Toggle Fullscreen">⤢ Fullscreen</button>
+  <button class="clean-btn" id="cleanBtn" title="Hide/Show UI">🧹 Clean UI</button>
+
+  <script>
+    (function() {
+      const qs = new URLSearchParams(location.search);
+      const theme = (qs.get('theme')||'cyan').toLowerCase();
+      const qsMode = (qs.get('mode')||'manual').toLowerCase();
+      const qsStart = qs.get('start');
+      const qsEnd = qs.get('end');
+      const qsChaotic = qs.get('chaotic');
+      const qsDuration = parseFloat(qs.get('duration'));
+      const initial = clamp(parseFloat(qs.get('progress')), 0, 100);
+
+      // Theme init
+      const themeNameEl = document.getElementById('themeName');
+      const themeSelect = document.getElementById('themeSelect');
+      const applyTheme = (t) => {
+        document.documentElement.setAttribute('data-theme', t === 'cyan' ? '' : t);
+        themeNameEl.textContent = t;
+        themeSelect.value = t;
+      };
+      if (["cyan","magenta","amber","lime","violet"].includes(theme)) applyTheme(theme);
+
+      // UI refs
+      const barFill = document.getElementById('barFill');
+      const barGlow = document.getElementById('barGlow');
+      const percentEl = document.getElementById('percent');
+      const marker = document.getElementById('marker');
+      const modeEl = document.getElementById('mode');
+      const statusEl = document.getElementById('status').querySelector('.kbd');
+      const fsBtn = document.getElementById('fsBtn');
+      const cleanBtn = document.getElementById('cleanBtn');
+      const wrap = document.getElementById('barWrap');
+      const hint = document.getElementById('hint');
+
+      // Controls (drawer)
+      const modeBar = document.getElementById('modeBar');
+      const startAt = document.getElementById('startAt');
+      const endAt = document.getElementById('endAt');
+      const chaotic = document.getElementById('chaotic');
+      const durationSec = document.getElementById('durationSec');
+      const durStartBtn = document.getElementById('durStart');
+      const durResetBtn = document.getElementById('durReset');
+      const countdownFields = document.getElementById('countdownFields');
+      const durationFields = document.getElementById('durationFields');
+      const qStartNow = document.getElementById('qStartNow');
+      const qNowToCurrentEnd = document.getElementById('qNowToCurrentEnd');
+
+      // Drawer
+      const drawer = document.getElementById('drawer');
+      const drawerHandle = document.getElementById('drawerHandle');
+      drawerHandle.addEventListener('click', () => drawer.classList.toggle('open'));
+      themeSelect.addEventListener('change', (e)=> applyTheme(e.target.value));
+
+      // Model state
+      let progress = isNaN(initial) ? 0 : initial; // 0..100
+      let target = progress; // 0..100
+      let auto = false;
+      let last = performance.now();
+
+      // Modes
+      const MODES = { MANUAL:'manual', COUNTDOWN:'countdown', DURATION:'duration' };
+      let mode = MODES.MANUAL;
+
+      // Duration state
+      let durStartTime = null;
+
+      // Apply QS
+      if (["manual","countdown","duration"].includes(qsMode)) {
+        setMode(qsMode);
+        const radio = modeBar.querySelector(`input[value="${qsMode}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (qsStart) startAt.value = qsStart;
+      if (qsEnd) endAt.value = qsEnd;
+      if (!isNaN(qsDuration)) durationSec.value = Math.max(1, qsDuration);
+      if (qsChaotic === '1' || qsChaotic === 'true') chaotic.checked = true;
+
+      // RAF loop
+      function tick(now) {
+        const dt = Math.min(33, now - last) / 1000; // seconds
+        last = now;
+
+        // Mode-driven target
+        if (mode === MODES.COUNTDOWN) {
+          const p = countdownProgress();
+          if (!Number.isNaN(p)) target = clamp(p);
+        } else if (mode === MODES.DURATION) {
+          const p = durationProgress();
+          if (p != null) target = clamp(p);
+        }
+
+        // Chaotic overrides (only when not countdown)
+        if (chaotic.checked && mode !== MODES.COUNTDOWN) {
+          chaoticTick(now);
+        }
+
+        const diff = target - progress;
+        const k = 10; // stiffness
+        const step = diff * (1 - Math.exp(-k * dt));
+        progress += step;
+        render();
+        requestAnimationFrame(tick);
+      }
+
+      // Chaotic logic
+      let nextChaosAt = 0;
+      function chaoticTick(now) {
+        if (now >= nextChaosAt) {
+          target = Math.random() * 100;
+          nextChaosAt = now + (400 + Math.random() * 1200);
+        }
+      }
+
+      function countdownProgress() {
+        const s = startAt.value ? new Date(startAt.value) : null;
+        const e = endAt.value ? new Date(endAt.value) : null;
+        if (!s || !e || isNaN(s) || isNaN(e) || e <= s) return NaN;
+        const now = new Date();
+        const total = e - s;
+        const elapsed = now - s;
+        const p = (elapsed / total) * 100;
+        // Update hint with remaining
+        const remaining = e - now;
+        hint.textContent = remaining > 0 ? formatRemaining(remaining) + ' remaining' : 'Completed';
+        return p;
+      }
+
+      function durationProgress() {
+        const d = Math.max(1, parseFloat(durationSec.value||'0')) * 1000; // ms
+        if (!durStartTime) return null; // not started
+        const now = performance.now();
+        const elapsed = now - durStartTime;
+        hint.textContent = formatRemaining(Math.max(0, d - elapsed)) + ' remaining';
+        return (elapsed / d) * 100;
+      }
+
+      function render() {
+        const p = clamp(progress, 0, 100);
+        barFill.style.width = p + '%';
+        barGlow.style.width = Math.max(0, p - 0.2) + '%';
+        marker.style.left = p + '%';
+        percentEl.textContent = Math.round(p) + '%';
+        statusEl.textContent = auto ? 'auto' : mode;
+      }
+
+      function clamp(v, min=0, max=100) { return Math.max(min, Math.min(max, v)); }
+
+      function setMode(m) {
+        mode = m;
+        modeEl.textContent = 'Mode: ' + m.charAt(0).toUpperCase() + m.slice(1);
+        countdownFields.style.display = (m === MODES.COUNTDOWN) ? 'block' : 'none';
+        durationFields.style.display = (m === MODES.DURATION) ? 'block' : 'none';
+      }
+
+      function formatRemaining(ms) {
+        const s = Math.ceil(ms/1000);
+        const d = Math.floor(s / 86400);
+        const h = Math.floor((s % 86400) / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = s % 60;
+        const parts = [];
+        if (d) parts.push(d + 'd');
+        if (h || d) parts.push(h + 'h');
+        if (m || h || d) parts.push(m + 'm');
+        parts.push(sec + 's');
+        return parts.join(' ');
+      }
+
+      // Public API
+      window.progressBar = {
+        set: (v) => { target = clamp(v); auto = false; setMode(MODES.MANUAL); },
+        get: () => target,
+        play: () => { auto = true; },
+        pause: () => { auto = false; },
+        setMode,
+        startDuration: () => { durStartTime = performance.now(); setMode(MODES.DURATION); },
+        resetDuration: () => { durStartTime = null; },
+      };
+
+      // Auto mode loop (legacy ping-pong if manual + not chaotic)
+      setInterval(() => {
+        if (!auto || mode !== MODES.MANUAL || chaotic.checked) return;
+        if (Math.abs(target - progress) < 0.5) {
+          const next = (target > 50) ? 0 : 100;
+          target = next;
+        }
+      }, 800);
+
+      // Interaction
+      wrap.addEventListener('click', () => {
+        if (mode === MODES.MANUAL) { auto = !auto; }
+      });
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') { e.preventDefault(); auto = !auto; return; }
+        const step = e.shiftKey ? 5 : 1;
+        if (e.key === 'ArrowRight') { target = clamp(target + step); setMode(MODES.MANUAL); auto = false; }
+        if (e.key === 'ArrowLeft')  { target = clamp(target - step); setMode(MODES.MANUAL); auto = false; }
+      });
+
+      modeBar.addEventListener('change', (e) => {
+        if (e.target.name === 'mode') setMode(e.target.value);
+      });
+      durStartBtn.addEventListener('click', () => { durStartTime = performance.now(); setMode(MODES.DURATION); });
+      durResetBtn.addEventListener('click', () => { durStartTime = null; progress = 0; target = 0; render(); });
+
+      // Quick: Countdown
+      qStartNow.addEventListener('click', () => {
+        startAt.value = toLocalISO(new Date());
+      });
+      qNowToCurrentEnd.addEventListener('click', () => {
+        if (endAt.value) startAt.value = toLocalISO(new Date());
+      });
+      countdownFields.querySelectorAll('[data-end]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const secs = parseInt(btn.getAttribute('data-end'), 10);
+          const base = startAt.value ? new Date(startAt.value) : new Date();
+          const end = new Date(base.getTime() + secs * 1000);
+          endAt.value = toLocalISO(end);
+        });
+      });
+
+      // Quick: Duration presets
+      durationFields.querySelectorAll('[data-dur]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          durationSec.value = btn.getAttribute('data-dur');
+        });
+      });
+
+      // Fullscreen toggle
+      fsBtn.addEventListener('click', async () => {
+        try {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+            fsBtn.textContent = '⤢ Exit Fullscreen';
+          } else {
+            await document.exitFullscreen();
+            fsBtn.textContent = '⤢ Fullscreen';
+          }
+        } catch (err) { console.warn(err); }
+      });
+
+      // Clean toggle
+      cleanBtn.addEventListener('click', () => {
+        document.body.classList.toggle('clean');
+        cleanBtn.textContent = document.body.classList.contains('clean') ? '🧹 Show UI' : '🧹 Clean UI';
+      });
+
+      // Auto-hide buttons on inactivity (handle + buttons)
+      let hideTimer;
+      const floats = [fsBtn, cleanBtn, drawerHandle];
+      const showBtn = () => { floats.forEach(b=>b.classList.remove('auto-hide')); clearTimeout(hideTimer); hideTimer = setTimeout(() => floats.forEach(b=>b.classList.add('auto-hide')), 1800); };
+      window.addEventListener('mousemove', showBtn);
+      window.addEventListener('touchstart', showBtn, {passive:true});
+      showBtn();
+
+      // Init
+      setMode(mode); // ensure fields visibility
+      let raf = requestAnimationFrame(tick);
+      target = progress;
+      render();
+
+      // ======= Self-tests (basic) =======
+      (function runSelfTests(){
+        try {
+          console.group('%cNeo HUD — Self-tests','color:#0ff');
+          console.assert(clamp(-10) === 0 && clamp(150) === 100, 'clamp bounds');
+          const iso = toLocalISO(new Date());
+          console.assert(/T\d{2}:\d{2}$/.test(iso), 'toLocalISO format');
+          // Countdown sample
+          const now = new Date();
+          const s = new Date(now.getTime()-1000*10);
+          const e = new Date(now.getTime()+1000*10);
+          startAt.value = toLocalISO(s);
+          endAt.value = toLocalISO(e);
+          setMode(MODES.COUNTDOWN);
+          const cp = countdownProgress();
+          console.assert(!Number.isNaN(cp) && cp >= 0 && cp <= 100, 'countdownProgress in range');
+          // Duration sample
+          durationSec.value = 2;
+          progressBar.startDuration();
+          setTimeout(()=>{ console.assert(progressBar.get() >= 0, 'duration progress running'); console.groupEnd(); }, 10);
+        } catch(err){ console.warn('Self-tests error', err); }
+      })();
+
+      // Helpers
+      function toLocalISO(d) {
+        const pad = (n)=> String(n).padStart(2,'0');
+        const y = d.getFullYear();
+        const mo = pad(d.getMonth()+1);
+        const da = pad(d.getDate());
+        const h = pad(d.getHours());
+        const mi = pad(d.getMinutes());
+        return `${y}-${mo}-${da}T${h}:${mi}`;
+      }
+    })();
+  </script>
+</body>
+</html>
