@@ -289,19 +289,35 @@
   initReady = true;
   queueURLSync();
 
-  (function runSelfTests(){
-    try {
-      console.group('%cNeo HUD — Self-tests','color:#0ff');
-      console.assert(clamp(-10) === 0 && clamp(150) === 100, 'clamp bounds');
-      const iso = toLocalISO(new Date()); const timePart = iso.split('T')[1] || '';
-      console.assert(timePart.includes(':'), 'toLocalISO basic shape');
-
-      const now = new Date(); const s = new Date(now.getTime()-1000*10); const e = new Date(now.getTime()+1000*10);
-      startAt.value = toLocalISO(s); endAt.value = toLocalISO(e); setMode(MODES.COUNTDOWN);
-      const cp = countdownProgress(); console.assert(!Number.isNaN(cp) && cp >= 0 && cp <= 100, 'countdown in range');
-
-      durationSec.value = 2; window.progressBar.startDuration();
-      setTimeout(()=>{ console.assert(window.progressBar.get() >= 0, 'duration running'); console.groupEnd(); }, 10);
-    } catch(err){ console.warn('Self-tests error', err); }
-  })();
+   (function runSelfTests(){
+     try {
+       console.group('%cNeo HUD — Self-tests','color:#0ff');
+       console.assert(clamp(-10) === 0 && clamp(150) === 100, 'clamp bounds');
+   
+       const iso = toLocalISO(new Date());
+       const timePart = iso.split('T')[1] || '';
+       console.assert(timePart.includes(':'), 'toLocalISO basic shape');
+   
+       // Use a wide window so minute truncation can't collapse start/end
+       const now = new Date();
+       const s = new Date(now.getTime() - 1000 * 30);  // now - 30s
+       const e = new Date(now.getTime() + 1000 * 90);  // now + 90s (=> at least +1 minute)
+   
+       startAt.value = toLocalISO(s);
+       endAt.value   = toLocalISO(e);
+       setMode(MODES.COUNTDOWN);
+   
+       const cp = countdownProgress();
+       console.assert(!Number.isNaN(cp) && cp >= 0 && cp <= 100, 'countdown in range');
+   
+       durationSec.value = 2;
+       window.progressBar.startDuration();
+       setTimeout(() => {
+         console.assert(window.progressBar.get() >= 0, 'duration running');
+         console.groupEnd();
+       }, 10);
+     } catch(err){
+       console.warn('Self-tests error', err);
+     }
+   })();
 })();
