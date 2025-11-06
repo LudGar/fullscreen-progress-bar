@@ -5,18 +5,17 @@
 
 (() => {
   // ---------- 0) URL-sync plumbing declared early (safe to call before init)
-  let urlSyncTimer = null;
-  let initReady = false; // becomes true after state/DOM wired
+  var urlSyncTimer = null;     // use var to avoid TDZ issues
+  var initReady = false;       // becomes true after state/DOM wired
 
   function queueURLSync() {
-    if (!initReady) return; // don't sync until app is ready
+    if (!initReady) return;            // don't sync until app is ready
     clearTimeout(urlSyncTimer);
     urlSyncTimer = setTimeout(syncURLFromState, 250);
   }
 
   function syncURLFromState() {
-    // guard again just in case
-    if (!initReady) return;
+    if (!initReady) return;            // extra guard
 
     const p = Math.round(target);
     const params = new URLSearchParams();
@@ -86,7 +85,7 @@
     document.documentElement.setAttribute('data-theme', t === 'cyan' ? '' : t);
     themeNameEl.textContent = t;
     themeSelect.value = t;
-    queueURLSync(); // safe now; guarded by initReady
+    queueURLSync(); // safe: guarded by initReady
   };
   if (["cyan","magenta","amber","lime","violet"].includes(theme)) applyTheme(theme);
   themeSelect.addEventListener('change', (e)=> applyTheme(e.target.value));
