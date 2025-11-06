@@ -1,9 +1,42 @@
 /* =========================================================
-   Neo HUD — script.js (URL sync enabled)
+   Neo HUD — script.js (URL sync enabled, init-safe)
    Interactivity, timers, theme switching, drawer & tests
    ========================================================= */
 
 (() => {
+  // ---------- 0) URL-sync plumbing declared early (safe to call before init)
+  let urlSyncTimer = null;
+  let initReady = false; // becomes true after state/DOM wired
+
+  function queueURLSync() {
+    if (!initReady) return; // don't sync until app is ready
+    clearTimeout(urlSyncTimer);
+    urlSyncTimer = setTimeout(syncURLFromState, 250);
+  }
+
+  function syncURLFromState() {
+    // guard again just in case
+    if (!initReady) return;
+
+    const p = Math.round(target);
+    const params = new URLSearchParams();
+
+    params.set('progress', String(p));
+    params.set('theme', themeSelect.value);
+    params.set('mode', mode);
+    if (startAt.value) params.set('start', startAt.value);
+    if (endAt.value)   params.set('end', endAt.value);
+    params.set('chaotic', chaotic.checked ? '1' : '0');
+
+    const d = parseFloat(durationSec.value);
+    if (!Number.isNaN(d) && d > 0) params.set('duration', String(d));
+
+    const newUrl = `${location.pathname}?${params.toString()}`;
+    history.replaceState(null, '', newUrl);
+
+    if (urlExample) urlExample.value = location.href;
+  }
+
   // ---------- 1) QS + initial
   const qs = new URLSearchParams(location.search);
   const theme     = (qs.get('theme')||'cyan').toLowerCase();
@@ -53,7 +86,7 @@
     document.documentElement.setAttribute('data-theme', t === 'cyan' ? '' : t);
     themeNameEl.textContent = t;
     themeSelect.value = t;
-    queueURLSync();
+    queueURLSync(); // safe now; guarded by initReady
   };
   if (["cyan","magenta","amber","lime","violet"].includes(theme)) applyTheme(theme);
   themeSelect.addEventListener('change', (e)=> applyTheme(e.target.value));
@@ -153,48 +186,7 @@
   window.addEventListener('touchstart', showBtn, {passive:true});
   showBtn();
 
-  // ---------- 7) URL Sync (debounced)
-  let urlSyncTimer = null;
-  function queueURLSync() {
-    clearTimeout(urlSyncTimer);
-    urlSyncTimer = setTimeout(syncURLFromState, 250);
-  }
-
-  function syncURLFromState() {
-    const p = Math.round(target);
-    const params = new URLSearchParams();
-
-    params.set('progress', String(p));
-    params.set('theme', themeSelect.value);
-    params.set('mode', mode);
-    if (startAt.value) params.set('start', startAt.value);
-    if (endAt.value)   params.set('end', endAt.value);
-    params.set('chaotic', chaotic.checked ? '1' : '0');
-
-    const d = parseFloat(durationSec.value);
-    if (!Number.isNaN(d) && d > 0) params.set('duration', String(d));
-
-    const newUrl = `${location.pathname}?${params.toString()}`;
-    history.replaceState(null, '', newUrl);
-
-    if (urlExample) urlExample.value = location.href;
-  }
-
-  // Copy button
-  if (copyUrlBtn) {
-    copyUrlBtn.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(location.href);
-        copyUrlBtn.textContent = 'Copied!';
-        setTimeout(()=> copyUrlBtn.textContent = 'Copy URL', 1000);
-      } catch {
-        // fallback: select text for manual copy
-        urlExample.focus(); urlExample.select();
-      }
-    });
-  }
-
-  // ---------- 8) Animation Loop
+  // ---------- 7) Animation Loop
   function tick(now) {
     const dt = Math.min(33, now - last) / 1000; last = now;
 
@@ -220,7 +212,7 @@
     if (Math.abs(target - progress) < 0.5) { target = (target > 50) ? 0 : 100; queueURLSync(); }
   }, 800);
 
-  // ---------- 9) Helpers
+  // ---------- 8) Helpers
   let nextChaosAt = 0;
   function chaoticTick(now) {
     if (now >= nextChaosAt) { target = Math.random() * 100; nextChaosAt = now + (400 + Math.random() * 1200); queueURLSync(); }
@@ -276,7 +268,7 @@
     return `${y}-${mo}-${da}T${h}:${mi}`;
   }
 
-  // ---------- 10) Public API
+  // ---------- 9) Public API
   window.progressBar = {
     set: (v) => { target = clamp(v); auto = false; setMode(MODES.MANUAL); queueURLSync(); },
     get: () => target,
@@ -288,9 +280,15 @@
     MODES
   };
 
-  // ---------- 11) Init + tests
-  setMode(mode); target = progress; render(); requestAnimationFrame(tick);
-  queueURLSync(); // seed URL + example field on load
+  // ---------- 10) Init + tests
+  setMode(mode);
+  target = progress;
+  render();
+  requestAnimationFrame(tick);
+
+  // app is now ready; enable URL syncing and seed the field once
+  initReady = true;
+  queueURLSync();
 
   (function runSelfTests(){
     try {
