@@ -423,30 +423,85 @@
     MODES
   };
 
-  // ---------- 11) Init + tests (safer window)
-  setMode(mode);
-  target = progress;
-  render();
-  requestAnimationFrame(tick);
+/* =========================
+   11) Drawer Tabs + Controls
+   ========================= */
+function showTab(which) {
+  const isSettings = which === 'settings';
 
-  initReady = true;
-  queueURLSync();
+  if (tabSettings) tabSettings.style.display = isSettings ? 'block' : 'none';
+  if (tabControls) tabControls.style.display = isSettings ? 'none' : 'block';
 
-  (function runSelfTests(){
-    try {
-      console.group('%cNeo HUD — Self-tests','color:#0ff');
-      console.assert(clamp(-10) === 0 && clamp(150) === 100, 'clamp bounds');
-      const iso = toLocalISO(new Date()); const timePart = iso.split('T')[1] || '';
-      console.assert(timePart.includes(':'), 'toLocalISO basic shape');
+  // Optional: visual “active” state; only if you add CSS for .tab-active
+  if (tabBtnSettings) tabBtnSettings.classList.toggle('tab-active', isSettings);
+  if (tabBtnControls) tabBtnControls.classList.toggle('tab-active', !isSettings);
+}
 
-      const now = new Date();
-      const s = new Date(now.getTime() - 1000*30);
-      const e = new Date(now.getTime() + 1000*90);
-      startAt.value = toLocalISO(s); endAt.value = toLocalISO(e); setMode(MODES.COUNTDOWN);
-      const cp = countdownProgress(); console.assert(!Number.isNaN(cp) && cp >= 0 && cp <= 100, 'countdown in range');
+// Wire tab buttons
+if (tabBtnSettings && tabBtnControls) {
+  tabBtnSettings.addEventListener('click', () => showTab('settings'));
+  tabBtnControls.addEventListener('click', () => showTab('controls'));
+}
 
-      durationSec.value = 2; window.progressBar.startDuration();
-      setTimeout(()=>{ console.assert(window.progressBar.get() >= 0, 'duration running'); console.groupEnd(); }, 10);
-    } catch(err){ console.warn('Self-tests error', err); }
-  })();
-})();
+// Utility to read current mode from radios
+function currentMode() {
+  const r = modeBar.querySelector('input[name="mode"]:checked');
+  return r ? r.value : 'manual';
+}
+
+// Control button behavior
+if (ctrlStart) {
+  ctrlStart.addEventListener('click', () => {
+    const m = currentMode();
+
+    if (m === 'manual') {
+      // manual: toggle auto-animate
+      window.progressBar.play();
+    } else if (m === 'duration') {
+      // duration: start (or restart) duration timer
+      window.progressBar.startDuration();
+    } else if (m === 'countdown') {
+      // countdown: if dates missing, set a quick 1h window
+      if (!startAt.value) {
+        startAt.value = toLocalISO(new Date());
+      }
+      if (!endAt.value) {
+        const base = new Date(startAt.value);
+        const end  = new Date(base.getTime() + 3600 * 1000);
+        endAt.value = toLocalISO(end);
+      }
+      window.progressBar.setMode('countdown');
+    }
+  });
+}
+
+if (ctrlPause) {
+  ctrlPause.addEventListener('click', () => {
+    const m = currentMode();
+
+    if (m === 'manual') {
+      // manual: just pause auto-animate
+      window.progressBar.pause();
+    } else if (m === 'duration') {
+      // duration: stop timer (keeps the current % on screen)
+      window.progressBar.resetDuration();
+    } else if (m === 'countdown') {
+      // countdown: snapshot current % and freeze as manual
+      const txt = document.getElementById('percent').textContent.replace('%','');
+      const val = Math.max(0, Math.min(100, parseFloat(txt) || 0));
+      window.progressBar.set(val);
+    }
+  });
+}
+
+if (ctrlStop) {
+  ctrlStop.addEventListener('click', () => {
+    // stop everything, reset to 0% manual
+    window.progressBar.pause();
+    window.progressBar.set(0);
+    window.progressBar.setMode('manual');
+  });
+}
+
+// Default active tab on load
+showTab('settings');
