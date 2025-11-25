@@ -353,16 +353,21 @@
 
   function applyURLString(str) {
     try {
-      const url = (str.startsWith('?') || !/^https?:/i.test(str))
-        ? new URL(str, location.href)
-        : new URL(str);
-      const p   = url.searchParams;
-
-      // theme
+      // Always parse against the current URL, but NEVER adopt a different pathname
+      const base = location.href;
+      const url  = (str.startsWith('?') || !/^https?:/i.test(str))
+        ? new URL(str, base)    // query or relative
+        : new URL(str, base);   // absolute, but we’ll ignore its pathname
+  
+      const p = url.searchParams;
+  
+      // --- Theme ---
       const t = (p.get('theme') || themeSelect.value).toLowerCase();
-      if (['cyan','magenta','amber','lime','violet'].includes(t)) applyTheme(t);
-
-      // mode
+      if (['cyan','magenta','amber','lime','violet'].includes(t)) {
+        applyTheme(t);
+      }
+  
+      // --- Mode (explicit or inferred) ---
       let m = (p.get('mode') || '').toLowerCase();
       if (!['manual','countdown','duration'].includes(m)) {
         if (p.get('start') || p.get('end'))      m = MODES.COUNTDOWN;
@@ -370,11 +375,12 @@
         else                                    m = MODES.MANUAL;
       }
       setMode(m);
-
+  
+      // --- Fields per mode ---
       if (m === MODES.MANUAL) {
         const pr = clamp(parseFloat(p.get('progress')), 0, 100);
         if (!Number.isNaN(pr)) {
-          target = pr;
+          target   = pr;
           progress = pr;
           render();
         }
@@ -382,21 +388,27 @@
       } else if (m === MODES.COUNTDOWN) {
         startAt.value = p.get('start') || '';
         endAt.value   = p.get('end')   || '';
-        chaotic.checked = false;
+        chaotic.checked = false; // irrelevant for countdown
       } else if (m === MODES.DURATION) {
         const d = parseFloat(p.get('duration'));
         if (!Number.isNaN(d) && d > 0) durationSec.value = d;
         chaotic.checked = false;
       }
-
-      history.replaceState(null, '', url.pathname + '?' + p.toString());
+  
+      // --- IMPORTANT: Keep the current path, only replace the search part ---
+      const newSearch = p.toString();
+      const newUrl = location.pathname + (newSearch ? '?' + newSearch : '');
+      history.replaceState(null, '', newUrl);
+  
       if (urlExample) urlExample.value = location.href;
+  
+      // ensure the UI reflects new state immediately
       render();
     } catch (err) {
       console.warn('Invalid URL/query in Share field:', err);
     }
   }
-
+  
   // ---------- 11) Progress / modes ----------
   function countdownProgress() {
     const s = startAt.value ? new Date(startAt.value) : null;
