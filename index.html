@@ -9,58 +9,103 @@
 <body>
   <div class="grid-overlay"></div>
 
-  <div class="corner tl">neo hud // progress</div>
-  <div class="corner tr" id="themeLabel">theme: <span class="kbd" id="themeName">cyan</span></div>
+  <!-- HUD corners -->
+  <div class="corner tl">
+    NEO HUD · <span id="mode">Mode: Manual</span>
+  </div>
+  <div class="corner tr">
+    STATUS · <span class="kbd">LIVE</span>
+  </div>
   <div class="corner bl">
     keys:
     <span class="kbd">←/→</span> ±1%
     &nbsp; <span class="kbd">Shift</span> for ±5%
     &nbsp; <span class="kbd">Space</span> pause
     &nbsp; <span class="kbd">H</span> hide UI
+    <button class="clean-btn" id="cleanBtn" title="Hide/Show UI">🧹 Clean UI</button>
   </div>
-  <div class="corner br" id="status">status: <span class="kbd">ready</span></div>
+  <div class="corner br">
+    share: <span class="kbd">URL</span>
+  </div>
 
+  <!-- Fullscreen toggle -->
+  <button class="fs-btn" id="fsBtn" title="Toggle Fullscreen">⤢ Fullscreen</button>
+
+  <!-- Center HUD -->
   <div class="hud">
     <div class="panel">
       <div class="panel-header">
-        <span class="pill"><span class="accent-dot"></span> Progress Channel</span>
-        <span class="pill" id="mode">Mode: Manual</span>
+        <div class="pill">
+          <span class="accent-dot"></span>
+          <span id="themeName">cyan</span>
+          <span>· PROGRESS CHANNEL</span>
+        </div>
+        <div class="pill" id="status">
+          mode: <span class="kbd">manual</span>
+        </div>
       </div>
 
       <div class="bar-wrap" id="barWrap">
         <div class="bar-bg"></div>
         <div class="bar-fill" id="barFill"></div>
         <div class="bar-glow" id="barGlow"></div>
-        <div class="marker" id="marker" style="left:0%"></div>
+        <div class="marker" id="marker"></div>
       </div>
 
       <div class="readout">
         <div class="percent" id="percent">0%</div>
-        <div class="hint" id="hint">Click to toggle auto. URL: <code>?progress=75&theme=violet&mode=countdown&start=2025-01-01T00:00&end=2025-12-31T23:59</code></div>
+        <div class="hint" id="hint">Manual · click bar or use ← / →</div>
       </div>
     </div>
   </div>
-  <!-- Settings drawer (outside bar) -->
+
+  <!-- Drawer handle -->
+  <div class="drawer-handle auto-hide" id="drawerHandle">
+    <span>Config</span>
+    <span class="label">Drawer</span>
+  </div>
+
+  <!-- Settings / Controls drawer -->
   <div class="drawer" id="drawer">
-    <div class="title"><span>Settings</span><span class="pill">UI</span></div>
+    <div class="title">
+      <span>Settings</span>
+      <span class="pill">UI</span>
+    </div>
+
     <!-- Tabs header -->
     <div class="row" style="gap:8px; margin-bottom:10px;">
-      <button class="btn-chip tab-btn" data-tab="settings" id="tabBtnSettings">Settings</button>
+      <button class="btn-chip tab-btn tab-active" data-tab="settings" id="tabBtnSettings">Settings</button>
       <button class="btn-chip tab-btn" data-tab="controls" id="tabBtnControls">Controls</button>
     </div>
 
-    <div class="group">
-      <div class="row tglbar control" id="modeBar">
-        <label><input type="radio" name="mode" value="manual" checked><span>Manual</span></label>
-        <label><input type="radio" name="mode" value="countdown"><span>Countdown</span></label>
-        <label><input type="radio" name="mode" value="duration"><span>Duration</span></label>
-      </div>
-      <label class="pill control" title="Chaotic target jumps when not using Countdown" style="margin-top:8px; display:inline-flex; align-items:center; gap:8px;">
-        <input type="checkbox" id="chaotic"> <span>Chaotic</span>
-      </label>
-    </div>
-
+    <!-- Settings tab -->
     <div id="tabSettings">
+      <!-- Mode + Chaotic -->
+      <div class="group">
+        <div class="row tglbar control" id="modeBar">
+          <label>
+            <input type="radio" name="mode" value="manual" checked>
+            <span>Manual</span>
+          </label>
+          <label>
+            <input type="radio" name="mode" value="countdown">
+            <span>Countdown</span>
+          </label>
+          <label>
+            <input type="radio" name="mode" value="duration">
+            <span>Duration</span>
+          </label>
+        </div>
+
+        <label class="pill control"
+               title="Chaotic target jumps when not using Countdown"
+               style="margin-top:8px; display:inline-flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="chaotic">
+          <span>Chaotic</span>
+        </label>
+      </div>
+
+      <!-- Countdown settings -->
       <div class="group" id="countdownFields">
         <div class="row" style="gap:8px;">
           <span class="pill">Start</span>
@@ -80,7 +125,8 @@
         </div>
       </div>
 
-      <div class="group" id="durationFields">
+      <!-- Duration settings -->
+      <div class="group" id="durationFields" style="display:none;">
         <div class="row" style="gap:8px;">
           <span class="pill">Duration (s)</span>
           <input class="control" type="number" id="durationSec" min="1" value="60">
@@ -96,6 +142,7 @@
         </div>
       </div>
 
+      <!-- Theme -->
       <div class="group">
         <div class="row" style="gap:8px;">
           <span class="pill">Theme</span>
@@ -109,11 +156,16 @@
         </div>
       </div>
 
-      <!-- Share / URL state -->
+      <!-- Share / URL -->
       <div class="group">
         <div class="row" style="gap:8px; align-items:flex-start;">
           <span class="pill">Share</span>
-          <input class="control" id="urlExample" type="text" style="flex:1; min-width:240px;" value="" placeholder="Paste a full URL or query (e.g., ?mode=countdown&start=...&end=...) and press Enter">
+          <input class="control"
+                 id="urlExample"
+                 type="text"
+                 style="flex:1; min-width:240px;"
+                 value=""
+                 placeholder="Paste a full URL or query (e.g., ?mode=countdown&start=...&end=...) and press Enter">
         </div>
         <div class="row" style="gap:8px; margin-top:8px; font-size:12px; color:var(--muted);">
           <span>Example:</span>
@@ -122,7 +174,7 @@
       </div>
     </div>
 
-    <!-- Controls tab content -->
+    <!-- Controls tab -->
     <div id="tabControls" style="display:none;">
       <div class="group">
         <div class="row" style="gap:10px; justify-content:space-between;">
@@ -132,103 +184,11 @@
         </div>
         <div class="row" style="gap:8px; margin-top:10px; color:var(--muted); font-size:12px;">
           <span>Behavior:</span>
-          <span>• Manual: Start = Auto, Pause = freeze, Stop = 0% & Manual</span>
+          <span>• Manual: Start = auto, Pause = freeze, Stop = 0% & Manual</span>
         </div>
       </div>
     </div>
-    </div>
-
-    <!-- New: Share / URL state -->
-    <div class="group">
-      <div class="row" style="gap:8px; align-items:flex-start;">
-        <span class="pill">Share</span>
-        <input class="control" id="urlExample" type="text" style="flex:1; min-width:240px;" value="" placeholder="Paste a full URL or query (e.g., ?mode=countdown&start=...&end=...) and press Enter">
-      </div>
-      <div class="row" style="gap:8px; margin-top:8px; font-size:12px; color:var(--muted);">
-        <span>Example:</span>
-        <code>?progress=75&theme=violet&mode=countdown&start=2025-01-01T00:00&end=2025-12-31T23:59&chaotic=0&duration=60</code>
-      </div>
-    </div>
   </div>
-  <div class="drawer-handle" id="drawerHandle" title="Settings">
-    ⚙
-    <span class="label">Settings</span>
-  </div>
-
-  <button class="fs-btn" id="fsBtn" title="Toggle Fullscreen">⤢ Fullscreen</button>
-  <button class="clean-btn" id="cleanBtn" title="Hide/Show UI">🧹 Clean UI</button>
-
-  <script src="script.js"></script>
-  <!-- Controls tab wiring (kept tiny to avoid touching main script) -->
-  <script>
-    (function(){
-      const btnSettings = document.getElementById('tabBtnSettings');
-      const btnControls = document.getElementById('tabBtnControls');
-      const tabSettings = document.getElementById('tabSettings');
-      const tabControls = document.getElementById('tabControls');
-      const modeBar = document.getElementById('modeBar');
-      const startAt = document.getElementById('startAt');
-      const endAt = document.getElementById('endAt');
-      const durationSec = document.getElementById('durationSec');
-
-      function showTab(which){
-        const isSettings = which === 'settings';
-        tabSettings.style.display = isSettings ? 'block' : 'none';
-        tabControls.style.display = isSettings ? 'none' : 'block';
-        btnSettings.classList.toggle('pill', !isSettings);
-        btnControls.classList.toggle('pill', isSettings);
-      }
-      btnSettings && btnSettings.addEventListener('click', ()=> showTab('settings'));
-      btnControls && btnControls.addEventListener('click', ()=> showTab('controls'));
-
-      function currentMode(){
-        const r = modeBar.querySelector('input[name="mode"]:checked');
-        return r ? r.value : 'manual';
-      }
-
-      // Control buttons
-      const bStart = document.getElementById('ctrlStart');
-      const bPause = document.getElementById('ctrlPause');
-      const bStop  = document.getElementById('ctrlStop');
-
-      bStart && bStart.addEventListener('click', ()=>{
-        const m = currentMode();
-        if (m === 'manual') {
-          window.progressBar.play();
-        } else if (m === 'duration') {
-          window.progressBar.startDuration();
-        } else if (m === 'countdown') {
-          // if dates missing, set a quick 1h from now
-          if (!startAt.value) startAt.value = (function(d){const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;})(new Date());
-          if (!endAt.value) { const base = new Date(startAt.value); const end = new Date(base.getTime()+3600*1000); const p=n=>String(n).padStart(2,'0'); endAt.value = `${end.getFullYear()}-${p(end.getMonth()+1)}-${p(end.getDate())}T${p(end.getHours())}:${p(end.getMinutes())}`; }
-          window.progressBar.setMode('countdown');
-        }
-      });
-
-      bPause && bPause.addEventListener('click', ()=>{
-        const m = currentMode();
-        if (m === 'manual') {
-          window.progressBar.pause();
-        } else if (m === 'duration') {
-          window.progressBar.resetDuration();
-        } else if (m === 'countdown') {
-          // snapshot current percent and switch to manual to "freeze"
-          const t = document.getElementById('percent').textContent.replace('%','');
-          const val = Math.max(0, Math.min(100, parseFloat(t)||0));
-          window.progressBar.set(val);
-        }
-      });
-
-      bStop && bStop.addEventListener('click', ()=>{
-        window.progressBar.pause();
-        window.progressBar.set(0);
-        window.progressBar.setMode('manual');
-      });
-
-      // default to settings tab on load
-      showTab('settings');
-    })();
-  </script>
 
   <script src="script.js"></script>
 </body>
