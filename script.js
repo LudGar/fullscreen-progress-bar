@@ -82,6 +82,16 @@
   const countdownFields = document.getElementById('countdownFields');
   const durationFields  = document.getElementById('durationFields');
 
+   // Tabs & control buttons
+   const tabBtnSettings = document.getElementById('tabBtnSettings');
+   const tabBtnControls = document.getElementById('tabBtnControls');
+   const tabSettings    = document.getElementById('tabSettings');
+   const tabControls    = document.getElementById('tabControls');
+   
+   const ctrlStart = document.getElementById('ctrlStart');
+   const ctrlPause = document.getElementById('ctrlPause');
+   const ctrlStop  = document.getElementById('ctrlStop');
+
   const qStartNow = document.getElementById('qStartNow');
   const qNowToCurrentEnd = document.getElementById('qNowToCurrentEnd');
 
