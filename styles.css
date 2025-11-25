@@ -1,3 +1,8 @@
+/* =========================================================
+   Neo HUD — styles.css
+   Visual design, layout, animations, and control theming
+   ========================================================= */
+
 /* =========================
    1) Theme Variables
    ========================= */
@@ -191,3 +196,344 @@ body {
 }
 .hint {
   color: var(--muted);
+  font-size: clamp(11px, 1.5vmin, 13px);
+}
+
+/* =========================
+   5) HUD Corners & Floating Buttons
+   ========================= */
+.corner {
+  position: fixed;
+  z-index: 2;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.corner.tl { left:2vmin; top:2vmin; }
+.corner.tr { right:2vmin; top:2vmin; }
+.corner.bl { left:2vmin; bottom:2vmin; }
+.corner.br { right:2vmin; bottom:2vmin; }
+
+.kbd {
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+}
+
+/* Floating fullscreen button */
+.fs-btn {
+  position: fixed;
+  z-index:3;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  padding: 8px 12px;
+  color: var(--text);
+  cursor: pointer;
+  opacity: .9;
+  transition: opacity .25s ease, transform .2s ease;
+  backdrop-filter: blur(6px) saturate(130%);
+}
+.fs-btn:hover { opacity: 1; transform: translateY(-2px); }
+.fs-btn { right:2vmin; bottom:2vmin; }
+
+/* Clean UI button (inline in bottom-left corner) */
+.clean-btn {
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  padding: 4px 8px;
+  color: var(--text);
+  cursor: pointer;
+  opacity: .9;
+  transition: opacity .25s ease, transform .2s ease;
+  backdrop-filter: blur(6px) saturate(130%);
+  margin-left: 8px;
+  font-size: 11px;
+}
+.clean-btn:hover { opacity: 1; transform: translateY(-2px); }
+
+.auto-hide { opacity:0; pointer-events:none; }
+
+/* =========================
+   6) Settings Drawer + Handle
+   ========================= */
+.drawer {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  translate: 0 -50%;
+  z-index: 3;
+  width: min(420px, 90vw);
+  max-height: 86vh;
+  overflow: auto;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border-left: 1px solid rgba(255,255,255,0.12);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+  padding: 14px;
+  box-shadow: -20px 0 40px rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px) saturate(120%);
+  transform: translateX(100%);
+  transition: transform .25s ease;
+}
+.drawer.open { transform: translateX(0); }
+
+.drawer .title {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  color:var(--muted-2);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:12px;
+  margin-bottom:10px;
+}
+
+.drawer .group {
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  margin-bottom: 10px;
+}
+
+.drawer-handle {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  translate: 0 -50%;
+  z-index: 3;
+  display:grid;
+  place-items:center;
+  gap:6px;
+  padding: 10px 10px;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-right:none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: -12px 0 30px rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px) saturate(130%);
+  user-select:none;
+}
+.drawer-handle .label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--muted-2);
+}
+
+/* =========================
+   7) Controls — Base + Toggle Bar + Buttons
+   ========================= */
+.control,
+.control input,
+.control button,
+.control select {
+  font: inherit;
+  color: var(--text);
+}
+
+/* base input look (dates/numbers) */
+.control input[type="datetime-local"],
+.control input[type="number"] {
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: var(--text);
+  color-scheme: dark;
+  outline: none;
+}
+.control input[type="datetime-local"]:focus,
+.control input[type="number"]:focus {
+  background: var(--field-bg-focus);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,224,255,0.15);
+}
+
+/* segmented toggle */
+.row {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+}
+
+.tglbar {
+  display:inline-flex;
+  gap:6px;
+  padding:4px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.12);
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+}
+.tglbar label {
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--muted);
+}
+.tglbar input { display:none; }
+.tglbar input:checked + span {
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+}
+
+/* generic buttons & chips */
+.control button,
+.btn-chip {
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--text);
+}
+.control button:hover,
+.btn-chip:hover {
+  box-shadow: 0 0 0 3px rgba(0,224,255,0.12);
+}
+.control button:active,
+.btn-chip:active {
+  transform: translateY(1px);
+}
+
+/* tab state */
+.tab-btn.tab-active {
+  box-shadow: 0 0 0 1px rgba(0,224,255,0.5);
+  background: rgba(0,224,255,0.08);
+}
+
+/* =========================
+   8) Dark Mode for Select & Date/Time
+   ========================= */
+.control select,
+.control input[type="datetime-local"],
+.control input[type="date"],
+.control input[type="time"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: linear-gradient(180deg, #06090d, #090d12);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 34px 10px 12px;
+  color: #cfeeff;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.control select:focus,
+.control input[type="datetime-local"]:focus,
+.control input[type="date"]:focus,
+.control input[type="time"]:focus {
+  background: linear-gradient(180deg, #0a1016, #0c131a);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,224,255,0.25),
+              inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.control select option {
+  background: #06090d;
+  color: #cfeeff;
+}
+
+/* custom caret for select */
+.control select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1.5L6 6.5L11 1.5' stroke='%23a6eaff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 8px;
+}
+
+/* native picker icons + text color */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(0.3) saturate(1.8) hue-rotate(180deg);
+  opacity: 0.9;
+}
+input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+  color: #cfeeff;
+}
+
+/* =========================
+   9) Dark Theme for Specific IDs
+   ========================= */
+#themeSelect,
+#durStart,
+#durReset,
+#durationSec,
+#startAt,
+#endAt,
+#urlExample {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: linear-gradient(180deg, #06090d, #090d12);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #cfeeff;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: background 0.15s ease, border-color 0.15s ease,
+              box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+#themeSelect:focus,
+#durStart:focus,
+#durReset:focus,
+#durationSec:focus,
+#startAt:focus,
+#endAt:focus,
+#urlExample:focus {
+  background: linear-gradient(180deg, #0a1016, #0c131a);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,224,255,0.25),
+              inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: translateY(-1px);
+}
+
+#themeSelect option {
+  background:#06090d;
+  color:#cfeeff;
+}
+
+#durationSec::-webkit-inner-spin-button,
+#durationSec::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+#durationSec { text-align: center; }
+
+/* =========================
+   10) Clean Mode
+   ========================= */
+body.clean .corner,
+body.clean .panel-header,
+body.clean .readout,
+body.clean .drawer,
+body.clean .drawer-handle {
+  display: none !important;
+}
+
+body.clean .fs-btn {
+  opacity: 0.5;
+}
