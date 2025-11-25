@@ -1,8 +1,3 @@
-/* =========================================================
-   Neo HUD — styles.css
-   Visual design, layout, animations, and control theming
-   ========================================================= */
-
 /* =========================
    1) Theme Variables
    ========================= */
@@ -19,13 +14,11 @@
   --shadow: 0 0 40px rgba(0, 224, 255, 0.1), 0 0 12px rgba(0, 224, 255, 0.2);
   --radius: 18px;
 
-  /* base control backgrounds (kept subtle) */
   --field-bg: rgba(255,255,255,0.06);
   --field-border: rgba(255,255,255,0.14);
   --field-bg-focus: rgba(255,255,255,0.10);
 }
 
-/* Optional accent themes via [data-theme] */
 [data-theme="magenta"] { --accent:#ff2bd6; --accent-soft: rgba(255, 43, 214, 0.18); }
 [data-theme="amber"]   { --accent:#ff9f1c; --accent-soft: rgba(255,159,28,0.18); }
 [data-theme="lime"]    { --accent:#a6ff00; --accent-soft: rgba(166,255,0,0.2);  }
@@ -35,8 +28,10 @@
    2) Base Page + Background
    ========================= */
 html, body { height: 100%; }
+
 body {
-  margin: 0; color: var(--text);
+  margin: 0;
+  color: var(--text);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   background:
     radial-gradient(1200px 800px at 70% -10%, rgba(0, 224, 255, 0.07), transparent 60%),
@@ -47,7 +42,10 @@ body {
 
 /* blueprint/circuit grid overlay */
 .grid-overlay {
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
   background-image:
     linear-gradient(var(--scan), var(--scan)),
     repeating-linear-gradient(0deg, transparent 0 29px, var(--grid) 29px 30px),
@@ -57,12 +55,21 @@ body {
           mask-image: radial-gradient(100% 100% at 50% 50%, rgba(0,0,0,0.9), rgba(0,0,0,0.3));
   animation: scan 6s linear infinite;
 }
-@keyframes scan { 0% { background-position: 0 -20vh, 0 0, 0 0 } 100% { background-position: 0 80vh, 0 0, 0 0 } }
+@keyframes scan {
+  0%   { background-position: 0 -20vh, 0 0, 0 0; }
+  100% { background-position: 0 80vh,  0 0, 0 0; }
+}
 
 /* =========================
    3) Layout Shell
    ========================= */
-.hud { position: fixed; inset: 4vmin; display: grid; place-items: center; z-index: 1; }
+.hud {
+  position: fixed;
+  inset: 4vmin;
+  display: grid;
+  place-items: center;
+  z-index: 1;
+}
 
 .panel {
   width: min(1200px, 92vw);
@@ -75,266 +82,112 @@ body {
 }
 
 .panel-header {
-  display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;
-  letter-spacing: .08em; text-transform: uppercase; font-size: clamp(12px, 1.5vmin, 14px); color: var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: clamp(12px, 1.5vmin, 14px);
+  color: var(--muted);
 }
 
 .pill {
-  display: inline-flex; align-items: center; gap: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   border: 1px solid rgba(255,255,255,0.12);
   background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-  border-radius: 999px; padding: 6px 10px;
+  border-radius: 999px;
+  padding: 6px 10px;
 }
-.accent-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: var(--shadow); }
+.accent-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: var(--shadow);
+}
 
 /* =========================
    4) Progress Bar + Readout
    ========================= */
 .bar-wrap {
-  position: relative; height: clamp(16px, 2.6vmin, 22px); border-radius: 999px; overflow: clip;
+  position: relative;
+  height: clamp(16px, 2.6vmin, 22px);
+  border-radius: 999px;
+  overflow: clip;
   outline: 1px solid rgba(255,255,255,0.12);
-  background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0)),
-              repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 8px);
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 8px);
 }
-.bar-bg { position:absolute; inset:0; opacity:.25; background: linear-gradient(90deg, var(--accent-soft), transparent 45%); filter: blur(12px); }
-.bar-fill { position:absolute; inset:0; width:0%; background: linear-gradient(90deg, var(--accent), #fff 120%); box-shadow: 0 0 10px var(--accent), 0 0 30px var(--accent); filter: saturate(120%); }
-.bar-glow { position:absolute; inset:0; width:0%; background:
-  radial-gradient(40px 40px at 100% 50%, rgba(255,255,255,0.35), transparent 60%),
-  linear-gradient(90deg, var(--accent-soft), transparent 60%);
-  mix-blend-mode: screen; opacity: .9; }
 
-.readout { display:flex; align-items:baseline; justify-content:space-between; gap:14px; margin-top:12px; font-feature-settings: "tnum" 1, "ss01" 1; }
-.percent { font-size: clamp(20px, 4vmin, 42px); letter-spacing: .02em; color: var(--text); text-shadow: 0 0 20px rgba(255,255,255,0.06); }
-.hint    { color: var(--muted); font-size: clamp(11px, 1.5vmin, 13px); }
+.bar-bg {
+  position:absolute;
+  inset:0;
+  opacity:.25;
+  background: linear-gradient(90deg, var(--accent-soft), transparent 45%);
+  filter: blur(12px);
+}
+
+.bar-fill {
+  position:absolute;
+  inset:0;
+  width:0%;
+  background: linear-gradient(90deg, var(--accent), #fff 120%);
+  box-shadow: 0 0 10px var(--accent), 0 0 30px var(--accent);
+  filter: saturate(120%);
+}
+
+.bar-glow {
+  position:absolute;
+  inset:0;
+  width:0%;
+  background:
+    radial-gradient(40px 40px at 100% 50%, rgba(255,255,255,0.35), transparent 60%),
+    linear-gradient(90deg, var(--accent-soft), transparent 60%);
+  mix-blend-mode: screen;
+  opacity: .9;
+}
 
 .marker {
-  position:absolute; top:50%; translate:-50% -50%;
-  width: clamp(10px,1.5vmin,12px); height: clamp(22px,3vmin,26px);
-  border-radius:4px; border:1px solid rgba(255,255,255,0.3);
+  position:absolute;
+  top:50%;
+  translate:-50% -50%;
+  width: clamp(10px,1.5vmin,12px);
+  height: clamp(22px,3vmin,26px);
+  border-radius:4px;
+  border:1px solid rgba(255,255,255,0.3);
   background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05));
-  box-shadow: var(--shadow); display:grid; place-items:center;
+  box-shadow: var(--shadow);
+  display:grid;
+  place-items:center;
 }
-.marker::after { content: ""; width:6px; height:6px; border-radius:999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
-
-/* =========================
-   5) HUD Corners & Floating Buttons
-   ========================= */
-.corner { position: fixed; z-index: 2; color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-.corner.tl { left:2vmin; top:2vmin; } .corner.tr { right:2vmin; top:2vmin; }
-.corner.bl { left:2vmin; bottom:2vmin; } .corner.br { right:2vmin; bottom:2vmin; }
-.kbd { border: 1px solid rgba(255,255,255,0.18); padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,0.05); }
-
-.fs-btn {
-  position: fixed; z-index:3;
-  border: 1px solid rgba(255,255,255,0.18); border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
-  padding: 8px 12px; color: var(--text);
-  cursor: pointer; opacity: .9;
-  transition: opacity .25s ease, transform .2s ease;
-  backdrop-filter: blur(6px) saturate(130%);
+.marker::after {
+  content: "";
+  width:6px;
+  height:6px;
+  border-radius:999px;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
 }
 
-/* Clean UI button lives inline inside the bottom-left tooltip */
-.clean-btn {
-  border: 1px solid rgba(255,255,255,0.18); border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
-  padding: 4px 8px; color: var(--text);
-  cursor: pointer; opacity: .9;
-  transition: opacity .25s ease, transform .2s ease;
-  backdrop-filter: blur(6px) saturate(130%);
-  margin-left: 8px;
-  font-size: 11px;
+.readout {
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:14px;
+  margin-top:12px;
+  font-feature-settings: "tnum" 1, "ss01" 1;
 }
 
-.fs-btn:hover,
-.clean-btn:hover {
-  opacity: 1;
-  transform: translateY(-2px);
+.percent {
+  font-size: clamp(20px, 4vmin, 42px);
+  letter-spacing: .02em;
+  color: var(--text);
+  text-shadow: 0 0 20px rgba(255,255,255,0.06);
 }
-
-.fs-btn { right:2vmin; bottom:2vmin; }
-
-.auto-hide { opacity:0; pointer-events:none; }
-
-.tab-btn.tab-active {
-  box-shadow: 0 0 0 1px rgba(0,224,255,0.5);
-  background: rgba(0,224,255,0.08);
-}
-
-/* =========================
-   6) Settings Drawer + Handle
-   ========================= */
-.drawer {
-  position: fixed; top: 50%; right: 0; translate: 0 -50%; z-index: 3;
-  width: min(420px, 90vw); max-height: 86vh; overflow: auto;
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-  border-left: 1px solid rgba(255,255,255,0.12); border-top: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.08);
-  border-top-left-radius: 14px; border-bottom-left-radius: 14px; padding: 14px;
-  box-shadow: -20px 0 40px rgba(0,0,0,0.35); backdrop-filter: blur(6px) saturate(120%);
-  transform: translateX(100%); transition: transform .25s ease;
-}
-.drawer.open { transform: translateX(0); }
-.drawer .title { display:flex; align-items:center; justify-content:space-between; color:var(--muted-2); text-transform:uppercase; letter-spacing:.08em; font-size:12px; margin-bottom:10px; }
-.drawer .group { border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 10px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); margin-bottom: 10px; }
-
-.drawer-handle {
-  position: fixed; top: 50%; right: 0; translate: 0 -50%; z-index: 3; display:grid; place-items:center; gap:6px;
-  padding: 10px 10px; border-top-left-radius: 10px; border-bottom-left-radius: 10px; border: 1px solid rgba(255,255,255,0.18); border-right:none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)); color: var(--text); cursor: pointer;
-  box-shadow: -12px 0 30px rgba(0,0,0,0.35); backdrop-filter: blur(6px) saturate(130%); user-select:none;
-}
-.drawer-handle .label { writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: .08em; text-transform: uppercase; font-size: 11px; color: var(--muted-2); }
-
-/* =========================
-   7) Controls — Base + Toggle Bar + Buttons
-   ========================= */
-.control, .control input, .control button, .control select { font: inherit; color: var(--text); }
-
-/* base input look (dates/numbers) */
-.control input[type="datetime-local"], .control input[type="number"] {
-  background: var(--field-bg); border: 1px solid var(--field-border); border-radius: 10px; padding: 8px 10px; color: var(--text);
-  color-scheme: dark; outline: none;
-}
-.control input[type="datetime-local"]:focus, .control input[type="number"]:focus {
-  background: var(--field-bg-focus); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,224,255,0.15);
-}
-
-/* segmented toggle */
-.row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-.tglbar { display:inline-flex; gap:6px; padding:4px; border-radius:999px; border:1px solid rgba(255,255,255,0.12); background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); }
-.tglbar label { padding: 6px 10px; border-radius: 999px; cursor: pointer; user-select: none; color: var(--muted); }
-.tglbar input { display:none; }
-.tglbar input:checked + span { color: var(--text); background: rgba(255,255,255,0.06); border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); }
-
-/* buttons & chips */
-.control button, .btn-chip {
-  border: 1px solid rgba(255,255,255,0.18); border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)); padding: 8px 12px; cursor: pointer; color: var(--text);
-}
-.control button:hover, .btn-chip:hover { box-shadow: 0 0 0 3px rgba(0,224,255,0.12); }
-.control button:active, .btn-chip:active { transform: translateY(1px); }
-
-/* =========================
-   8) Dark Mode for Select & Date/Time
-   ========================= */
-.control select,
-.control input[type="datetime-local"],
-.control input[type="date"],
-.control input[type="time"]{
-  appearance: none; -webkit-appearance: none; -moz-appearance: none;
-  background: linear-gradient(180deg, #06090d, #090d12);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px;
-  padding: 10px 34px 10px 12px;
-  color: #cfeeff;
-  outline: none;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-}
-.control select:focus,
-.control input[type="datetime-local"]:focus,
-.control input[type="date"]:focus,
-.control input[type="time"]:focus {
-  background: linear-gradient(180deg, #0a1016, #0c131a);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(0,224,255,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
-}
-.control select option { background: #06090d; color: #cfeeff; }
-
-/* custom caret for select */
-.control select {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1.5L6 6.5L11 1.5' stroke='%23a6eaff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-  background-repeat: no-repeat; background-position: right 10px center; background-size: 12px 8px;
-}
-
-/* native picker icons + text color */
-input[type="datetime-local"]::-webkit-calendar-picker-indicator,
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.8) sepia(0.3) saturate(1.8) hue-rotate(180deg); opacity: 0.9; }
-input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper,
-input[type="date"]::-webkit-datetime-edit-fields-wrapper,
-input[type="time"]::-webkit-datetime-edit-fields-wrapper { color: #cfeeff; }
-
-/* =========================
-   9) Dark Theme for Specific IDs
-   ========================= */
-#themeSelect,
-#durStart,
-#durReset,
-#durationSec,
-#startAt,
-#endAt {
-  appearance: none; -webkit-appearance: none; -moz-appearance: none;
-  background: linear-gradient(180deg, #06090d, #090d12);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px;
-  padding: 10px 14px;
-  color: #cfeeff;
-  outline: none;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-}
-#themeSelect:focus,
-#durStart:focus,
-#durReset:focus,
-#durationSec:focus,
-#startAt:focus,
-#endAt:focus {
-  background: linear-gradient(180deg, #0a1016, #0c131a);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(0,224,255,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
-  transform: translateY(-1px);
-}
-#durStart:hover, #durReset:hover {
-  background: linear-gradient(180deg, #0b1015, #0e141a);
-  border-color: rgba(0,224,255,0.3);
-  box-shadow: 0 0 8px rgba(0,224,255,0.2);
-}
-#themeSelect option { background:#06090d; color:#cfeeff; }
-#durationSec::-webkit-inner-spin-button, #durationSec::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-#durationSec { text-align: center; }
-
-/* =========================
-   9b) Dark Theme — Share Controls
-   ========================= */
-#urlExample,
-#copyUrl {
-  appearance: none; -webkit-appearance: none; -moz-appearance: none;
-  background: linear-gradient(180deg, #06090d, #090d12);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px;
-  padding: 10px 14px;
-  color: #cfeeff;
-  outline: none;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-/* Field specifics */
-#urlExample {
-  /* mirrors inline layout; remove inline style if you prefer this */
-  flex: 1;
-  min-width: 240px;
-}
-#urlExample:focus {
-  background: linear-gradient(180deg, #0a1016, #0c131a);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(0,224,255,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
-  transform: translateY(-1px);
-}
-
-/* Button interactions */
-#copyUrl { cursor: pointer; }
-#copyUrl:hover {
-  background: linear-gradient(180deg, #0b1015, #0e141a);
-  border-color: rgba(0,224,255,0.3);
-  box-shadow: 0 0 8px rgba(0,224,255,0.2);
-  transform: translateY(-1px);
-}
-#copyUrl:active { transform: translateY(0); }
-
-/* =========================
-   10) Clean Mode
-   ========================= */
-body.clean .corner, body.clean .panel-header, body.clean .readout { display: none !important; }
-body.clean .clean-btn { opacity: 0.5; }
+.hint {
+  color: var(--muted);
