@@ -124,13 +124,36 @@ body {
 .corner.bl { left:2vmin; bottom:2vmin; } .corner.br { right:2vmin; bottom:2vmin; }
 .kbd { border: 1px solid rgba(255,255,255,0.18); padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,0.05); }
 
-.fs-btn, .clean-btn {
-  position: fixed; z-index:3; border: 1px solid rgba(255,255,255,0.18); border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); padding: 8px 12px; color: var(--text);
-  cursor: pointer; opacity: .9; transition: opacity .25s ease, transform .2s ease; backdrop-filter: blur(6px) saturate(130%);
+.fs-btn {
+  position: fixed; z-index:3;
+  border: 1px solid rgba(255,255,255,0.18); border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  padding: 8px 12px; color: var(--text);
+  cursor: pointer; opacity: .9;
+  transition: opacity .25s ease, transform .2s ease;
+  backdrop-filter: blur(6px) saturate(130%);
 }
-.fs-btn:hover, .clean-btn:hover { opacity: 1; transform: translateY(-2px); }
-.fs-btn { right:2vmin; bottom:2vmin; } .clean-btn { left:2vmin; bottom:2vmin; }
+
+/* Clean UI button lives inline inside the bottom-left tooltip */
+.clean-btn {
+  border: 1px solid rgba(255,255,255,0.18); border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  padding: 4px 8px; color: var(--text);
+  cursor: pointer; opacity: .9;
+  transition: opacity .25s ease, transform .2s ease;
+  backdrop-filter: blur(6px) saturate(130%);
+  margin-left: 8px;
+  font-size: 11px;
+}
+
+.fs-btn:hover,
+.clean-btn:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.fs-btn { right:2vmin; bottom:2vmin; }
+
 .auto-hide { opacity:0; pointer-events:none; }
 
 /* =========================
