@@ -187,12 +187,40 @@
   wrap.addEventListener('click', () => { if (mode === MODES.MANUAL) auto = !auto; });
 
   // Keyboard control (manual progress updates update URL)
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') { e.preventDefault(); auto = !auto; return; }
-    const step = e.shiftKey ? 5 : 1;
-    if (e.key === 'ArrowRight') { target = clamp(target + step); setMode(MODES.MANUAL); auto = false; queueURLSync(); }
-    if (e.key === 'ArrowLeft')  { target = clamp(target - step); setMode(MODES.MANUAL); auto = false; queueURLSync(); }
-  });
+   window.addEventListener('keydown', (e) => {
+     // Space = toggle auto
+     if (e.code === 'Space') {
+       e.preventDefault();
+       auto = !auto;
+       return;
+     }
+   
+     // H = toggle Hide UI (clean mode)
+     if (e.key === 'h' || e.key === 'H') {
+       document.body.classList.toggle('clean');
+       if (cleanBtn) {
+         cleanBtn.textContent = document.body.classList.contains('clean')
+           ? '🧹 Show UI'
+           : '🧹 Clean UI';
+       }
+       return;
+     }
+   
+     // Arrows = manual progress adjust
+     const step = e.shiftKey ? 5 : 1;
+     if (e.key === 'ArrowRight') {
+       target = clamp(target + step);
+       setMode(MODES.MANUAL);
+       auto = false;
+       queueURLSync();
+     }
+     if (e.key === 'ArrowLeft')  {
+       target = clamp(target - step);
+       setMode(MODES.MANUAL);
+       auto = false;
+       queueURLSync();
+     }
+   });
 
   // Auto-hide floats
   let hideTimer; const floats = [fsBtn, cleanBtn, drawerHandle];
