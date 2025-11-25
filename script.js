@@ -2,21 +2,24 @@
   // ---------- 0) URL sync plumbing ----------
   var urlSyncTimer = null;
   var initReady = false;
+  var suppressURLSync = false;
 
   function queueURLSync() {
-    if (!initReady) return;
+    // don't touch URL until app is ready, or while we're actively applying a pasted URL
+    if (!initReady || suppressURLSync) return;
     clearTimeout(urlSyncTimer);
     urlSyncTimer = setTimeout(syncURLFromState, 200);
   }
-
+  
+  // Build a minimal URL that only includes the active mode's needed params
   function syncURLFromState() {
-    if (!initReady) return;
-
+    if (!initReady || suppressURLSync) return;
+  
     const params = new URLSearchParams();
     // always keep theme + mode
     params.set('theme', themeSelect.value);
     params.set('mode', mode);
-
+  
     switch (mode) {
       case MODES.MANUAL: {
         const p = Math.round(target);
@@ -35,12 +38,14 @@
         break;
       }
     }
-
-    const newUrl = `${location.pathname}?${params.toString()}`;
+  
+    const search = params.toString();
+    const newUrl = location.pathname + (search ? '?' + search : '');
     history.replaceState(null, '', newUrl);
+  
     if (urlExample) urlExample.value = location.href;
   }
-
+  
   // ---------- 1) Helpers ----------
   function clamp(v, min = 0, max = 100) {
     return Math.max(min, Math.min(max, v));
@@ -353,26 +358,28 @@
 
   function applyURLString(str) {
     try {
-      // Always parse against the current URL, but NEVER adopt a different pathname
+      suppressURLSync = true;  // 🔒 freeze URL sync while we apply
+  
+      // Always parse against the current page, but ignore foreign paths
       const base = location.href;
       const url  = (str.startsWith('?') || !/^https?:/i.test(str))
-        ? new URL(str, base)    // query or relative
-        : new URL(str, base);   // absolute, but we’ll ignore its pathname
+        ? new URL(str, base)   // query or relative
+        : new URL(str, base);  // absolute; we will only borrow its search params anyway
   
       const p = url.searchParams;
   
       // --- Theme ---
       const t = (p.get('theme') || themeSelect.value).toLowerCase();
       if (['cyan','magenta','amber','lime','violet'].includes(t)) {
-        applyTheme(t);
+        applyTheme(t);   // applyTheme itself calls queueURLSync, but it's ignored while suppressURLSync=true
       }
   
       // --- Mode (explicit or inferred) ---
       let m = (p.get('mode') || '').toLowerCase();
       if (!['manual','countdown','duration'].includes(m)) {
-        if (p.get('start') || p.get('end'))      m = MODES.COUNTDOWN;
-        else if (p.has('duration'))             m = MODES.DURATION;
-        else                                    m = MODES.MANUAL;
+        if (p.get('start') || p.get('end'))  m = MODES.COUNTDOWN;
+        else if (p.has('duration'))          m = MODES.DURATION;
+        else                                 m = MODES.MANUAL;
       }
       setMode(m);
   
@@ -382,32 +389,34 @@
         if (!Number.isNaN(pr)) {
           target   = pr;
           progress = pr;
-          render();
         }
         chaotic.checked = (p.get('chaotic') === '1' || p.get('chaotic') === 'true');
       } else if (m === MODES.COUNTDOWN) {
         startAt.value = p.get('start') || '';
         endAt.value   = p.get('end')   || '';
-        chaotic.checked = false; // irrelevant for countdown
+        chaotic.checked = false;
       } else if (m === MODES.DURATION) {
         const d = parseFloat(p.get('duration'));
         if (!Number.isNaN(d) && d > 0) durationSec.value = d;
         chaotic.checked = false;
       }
   
-      // --- IMPORTANT: Keep the current path, only replace the search part ---
-      const newSearch = p.toString();
-      const newUrl = location.pathname + (newSearch ? '?' + newSearch : '');
+      // --- Keep *current* path, only change the query ---
+      const search = p.toString();
+      const newUrl = location.pathname + (search ? '?' + search : '');
       history.replaceState(null, '', newUrl);
   
       if (urlExample) urlExample.value = location.href;
   
-      // ensure the UI reflects new state immediately
+      // ensure UI reflects new state immediately
       render();
     } catch (err) {
       console.warn('Invalid URL/query in Share field:', err);
+    } finally {
+      suppressURLSync = false;  // 🔓 re-enable URL sync
     }
   }
+
   
   // ---------- 11) Progress / modes ----------
   function countdownProgress() {
