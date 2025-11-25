@@ -1,6 +1,5 @@
 /* =========================================================
-   Neo HUD — script.js (mode-aware URL + init-safe)
-   Interactivity, timers, theme switching, drawer & tests
+   Neo HUD — script.js (URL paste/apply + click-to-copy)
    ========================================================= */
 
 (() => {
@@ -11,7 +10,7 @@
   function queueURLSync() {
     if (!initReady) return; // don't sync until app is ready
     clearTimeout(urlSyncTimer);
-    urlSyncTimer = setTimeout(syncURLFromState, 250);
+    urlSyncTimer = setTimeout(syncURLFromState, 200);
   }
 
   // Build a minimal URL that only includes the active mode's needed params
@@ -19,7 +18,6 @@
     if (!initReady) return;
 
     const params = new URLSearchParams();
-
     // always persist theme + mode
     params.set('theme', themeSelect.value);
     params.set('mode', mode);
@@ -28,8 +26,7 @@
       case MODES.MANUAL: {
         const p = Math.round(target);
         params.set('progress', String(p));
-        // only include chaotic if it's on (only relevant outside countdown)
-        if (chaotic.checked) params.set('chaotic', '1');
+        if (chaotic.checked) params.set('chaotic', '1'); // only if relevant
         break;
       }
       case MODES.COUNTDOWN: {
@@ -46,7 +43,6 @@
 
     const newUrl = `${location.pathname}?${params.toString()}`;
     history.replaceState(null, '', newUrl);
-
     if (urlExample) urlExample.value = location.href;
   }
 
@@ -54,7 +50,7 @@
   const qs = new URLSearchParams(location.search);
   const theme     = (qs.get('theme')||'cyan').toLowerCase();
 
-  // read explicit mode (if any)
+  // read explicit mode (if any) or infer later
   let qsMode = (qs.get('mode') || '').toLowerCase();
   const qsStart   = qs.get('start');
   const qsEnd     = qs.get('end');
@@ -92,7 +88,7 @@
   const drawer = document.getElementById('drawer');
   const drawerHandle = document.getElementById('drawerHandle');
 
-  // NEW: Share / URL
+  // Share / URL field (editable)
   const urlExample = document.getElementById('urlExample');
 
   // ---------- 3) Theme init
@@ -116,8 +112,7 @@
 
   let durStartTime = null;
 
-  // ---------- 5) Infer mode if needed, apply QS → UI, and ensure radio reflects it
-  // If no valid mode provided, infer from params.
+  // ---------- 5) Infer mode if needed, apply QS → UI, ensure radio reflects it
   if (!["manual","countdown","duration"].includes(qsMode)) {
     if (qsStart || qsEnd) qsMode = MODES.COUNTDOWN;
     else if (!isNaN(qsDuration)) qsMode = MODES.DURATION;
@@ -134,7 +129,7 @@
   if (!isNaN(qsDuration)) durationSec.value = Math.max(1, qsDuration);
   if (qsChaotic === '1' || qsChaotic === 'true') chaotic.checked = true;
 
-  // For manual mode, honor initial progress; otherwise ignore manual progress param.
+  // For non-manual, ignore manual progress param
   if (qsMode !== MODES.MANUAL) { progress = 0; target = 0; }
 
   // ---------- 6) Drawer + Buttons
@@ -210,7 +205,82 @@
   window.addEventListener('touchstart', showBtn, {passive:true});
   showBtn();
 
-  // ---------- 7) Animation Loop
+  // ---------- 7) URL Field: click-to-copy + paste-to-apply
+  if (urlExample) {
+    // keep field current
+    urlExample.value = location.href;
+
+    // Click: select + copy
+    urlExample.addEventListener('click', async () => {
+      urlExample.select();
+      try {
+        await navigator.clipboard.writeText(location.href);
+        // subtle visual feedback
+        urlExample.style.boxShadow = '0 0 0 3px rgba(0,224,255,0.25)';
+        setTimeout(()=> urlExample.style.boxShadow = '', 300);
+      } catch {
+        // fallback: selection is already active; user can Ctrl/Cmd+C
+      }
+    });
+
+    // Enter: parse and apply URL/query without navigation
+    urlExample.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        applyURLString(urlExample.value.trim());
+      }
+    });
+  }
+
+  // Apply a pasted/typed URL or query string to the app without reload
+  function applyURLString(str) {
+    try {
+      const u = (str.startsWith('?') || !/^https?:/i.test(str))
+        ? new URL(str, location.href)     // query or relative
+        : new URL(str);                   // absolute
+      const p = u.searchParams;
+
+      // theme
+      const t = (p.get('theme') || themeSelect.value).toLowerCase();
+      if (["cyan","magenta","amber","lime","violet"].includes(t)) applyTheme(t);
+
+      // infer or read mode
+      let m = (p.get('mode') || '').toLowerCase();
+      if (!["manual","countdown","duration"].includes(m)) {
+        if (p.get('start') || p.get('end')) m = MODES.COUNTDOWN;
+        else if (p.has('duration')) m = MODES.DURATION;
+        else m = MODES.MANUAL;
+      }
+      setMode(m);
+      const r = modeBar.querySelector(`input[value="${m}"]`); if (r) r.checked = true;
+
+      // set fields per mode
+      if (m === MODES.MANUAL) {
+        const pr = clamp(parseFloat(p.get('progress')), 0, 100);
+        if (!Number.isNaN(pr)) { target = pr; progress = pr; render(); }
+        chaotic.checked = (p.get('chaotic') === '1' || p.get('chaotic') === 'true');
+      } else if (m === MODES.COUNTDOWN) {
+        startAt.value = p.get('start') || '';
+        endAt.value   = p.get('end')   || '';
+        chaotic.checked = false; // irrelevant here
+      } else if (m === MODES.DURATION) {
+        const d = parseFloat(p.get('duration'));
+        durationSec.value = (!Number.isNaN(d) && d > 0) ? d : durationSec.value;
+        chaotic.checked = false; // irrelevant here
+      }
+
+      // update URL bar and field (normalized)
+      history.replaceState(null, '', u.pathname + '?' + p.toString());
+      if (urlExample) urlExample.value = location.href;
+
+      // ensure hint renders immediately
+      render();
+    } catch (err) {
+      console.warn('Invalid URL/query in Share field:', err);
+    }
+  }
+
+  // ---------- 8) Animation Loop
   function tick(now) {
     const dt = Math.min(33, now - last) / 1000; last = now;
 
@@ -236,7 +306,7 @@
     if (Math.abs(target - progress) < 0.5) { target = (target > 50) ? 0 : 100; queueURLSync(); }
   }, 800);
 
-  // ---------- 8) Helpers
+  // ---------- 9) Helpers
   let nextChaosAt = 0;
   function chaoticTick(now) {
     if (now >= nextChaosAt) { target = Math.random() * 100; nextChaosAt = now + (400 + Math.random() * 1200); queueURLSync(); }
@@ -265,8 +335,7 @@
     modeEl.textContent = 'Mode: ' + m.charAt(0).toUpperCase() + m.slice(1);
     countdownFields.style.display = (m === MODES.COUNTDOWN) ? 'block' : 'none';
     durationFields.style.display  = (m === MODES.DURATION)  ? 'block' : 'none';
-
-    // ensure the radio matches the programmatic change
+    // ensure radio matches programmatic change
     const r = modeBar.querySelector(`input[value="${m}"]`);
     if (r) r.checked = true;
   }
@@ -278,7 +347,7 @@
     marker.style.left = p + '%';
     percentEl.textContent = Math.round(p) + '%';
     statusEl.textContent = auto ? 'auto' : mode;
-    if (urlExample && !urlSyncTimer) urlExample.value = location.href; // keep visible value fresh
+    if (urlExample && !urlSyncTimer) urlExample.value = location.href;
   }
 
   function clamp(v, min=0, max=100) { return Math.max(min, Math.min(max, v)); }
@@ -304,7 +373,7 @@
     return `${y}-${mo}-${da}T${h}:${mi}`;
   }
 
-  // ---------- 9) Public API
+  // ---------- 10) Public API
   window.progressBar = {
     set: (v) => { target = clamp(v); auto = false; setMode(MODES.MANUAL); queueURLSync(); },
     get: () => target,
@@ -316,37 +385,29 @@
     MODES
   };
 
-  // ---------- 10) Init + tests (safe)
-  setMode(mode);           // default manual, will be overwritten by qsMode above
+  // ---------- 11) Init + tests (safer window)
+  setMode(mode);
   target = progress;
   render();
   requestAnimationFrame(tick);
 
-  // app is now ready; enable URL syncing and seed the field once
   initReady = true;
   queueURLSync();
 
-  // Self-tests (wider window to avoid minute truncation)
   (function runSelfTests(){
     try {
       console.group('%cNeo HUD — Self-tests','color:#0ff');
       console.assert(clamp(-10) === 0 && clamp(150) === 100, 'clamp bounds');
-
-      const iso = toLocalISO(new Date());
-      const timePart = iso.split('T')[1] || '';
+      const iso = toLocalISO(new Date()); const timePart = iso.split('T')[1] || '';
       console.assert(timePart.includes(':'), 'toLocalISO basic shape');
 
       const now = new Date();
-      const s = new Date(now.getTime() - 1000*30);  // now - 30s
-      const e = new Date(now.getTime() + 1000*90);  // now + 90s
-      startAt.value = toLocalISO(s);
-      endAt.value   = toLocalISO(e);
-      setMode(MODES.COUNTDOWN);
-      const cp = countdownProgress();
-      console.assert(!Number.isNaN(cp) && cp >= 0 && cp <= 100, 'countdown in range');
+      const s = new Date(now.getTime() - 1000*30);
+      const e = new Date(now.getTime() + 1000*90);
+      startAt.value = toLocalISO(s); endAt.value = toLocalISO(e); setMode(MODES.COUNTDOWN);
+      const cp = countdownProgress(); console.assert(!Number.isNaN(cp) && cp >= 0 && cp <= 100, 'countdown in range');
 
-      durationSec.value = 2;
-      window.progressBar.startDuration();
+      durationSec.value = 2; window.progressBar.startDuration();
       setTimeout(()=>{ console.assert(window.progressBar.get() >= 0, 'duration running'); console.groupEnd(); }, 10);
     } catch(err){ console.warn('Self-tests error', err); }
   })();
