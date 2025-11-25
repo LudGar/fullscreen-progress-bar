@@ -37,6 +37,11 @@
   <!-- Settings drawer (outside bar) -->
   <div class="drawer" id="drawer">
     <div class="title"><span>Settings</span><span class="pill">UI</span></div>
+    <!-- Tabs header -->
+    <div class="row" style="gap:8px; margin-bottom:10px;">
+      <button class="btn-chip tab-btn" data-tab="settings" id="tabBtnSettings">Settings</button>
+      <button class="btn-chip tab-btn" data-tab="controls" id="tabBtnControls">Controls</button>
+    </div>
 
     <div class="group">
       <div class="row tglbar control" id="modeBar">
@@ -49,52 +54,82 @@
       </label>
     </div>
 
-    <div class="group" id="countdownFields">
-      <div class="row" style="gap:8px;">
-        <span class="pill">Start</span>
-        <input class="control" type="datetime-local" id="startAt">
+    <div id="tabSettings">
+      <div class="group" id="countdownFields">
+        <div class="row" style="gap:8px;">
+          <span class="pill">Start</span>
+          <input class="control" type="datetime-local" id="startAt">
+        </div>
+        <div class="row" style="gap:8px; margin-top:8px;">
+          <span class="pill">End</span>
+          <input class="control" type="datetime-local" id="endAt">
+        </div>
+        <div class="row" style="gap:8px; margin-top:10px;">
+          <span class="pill">Quick</span>
+          <button class="btn-chip" id="qStartNow">Start = Now</button>
+          <button class="btn-chip" data-end="3600">End +1h</button>
+          <button class="btn-chip" data-end="86400">+24h</button>
+          <button class="btn-chip" data-end="604800">+7d</button>
+          <button class="btn-chip" id="qNowToCurrentEnd">Now → End</button>
+        </div>
       </div>
-      <div class="row" style="gap:8px; margin-top:8px;">
-        <span class="pill">End</span>
-        <input class="control" type="datetime-local" id="endAt">
+
+      <div class="group" id="durationFields">
+        <div class="row" style="gap:8px;">
+          <span class="pill">Duration (s)</span>
+          <input class="control" type="number" id="durationSec" min="1" value="60">
+          <button class="control" id="durStart">Start</button>
+          <button class="control" id="durReset">Reset</button>
+        </div>
+        <div class="row" style="gap:8px; margin-top:10px;">
+          <span class="pill">Presets</span>
+          <button class="btn-chip" data-dur="30">30s</button>
+          <button class="btn-chip" data-dur="60">1m</button>
+          <button class="btn-chip" data-dur="300">5m</button>
+          <button class="btn-chip" data-dur="600">10m</button>
+        </div>
       </div>
-      <div class="row" style="gap:8px; margin-top:10px;">
-        <span class="pill">Quick</span>
-        <button class="btn-chip" id="qStartNow">Start = Now</button>
-        <button class="btn-chip" data-end="3600">End +1h</button>
-        <button class="btn-chip" data-end="86400">+24h</button>
-        <button class="btn-chip" data-end="604800">+7d</button>
-        <button class="btn-chip" id="qNowToCurrentEnd">Now → End</button>
+
+      <div class="group">
+        <div class="row" style="gap:8px;">
+          <span class="pill">Theme</span>
+          <select class="control" id="themeSelect">
+            <option value="cyan">Cyan</option>
+            <option value="magenta">Magenta</option>
+            <option value="amber">Amber</option>
+            <option value="lime">Lime</option>
+            <option value="violet">Violet</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Share / URL state -->
+      <div class="group">
+        <div class="row" style="gap:8px; align-items:flex-start;">
+          <span class="pill">Share</span>
+          <input class="control" id="urlExample" type="text" style="flex:1; min-width:240px;" value="" placeholder="Paste a full URL or query (e.g., ?mode=countdown&start=...&end=...) and press Enter">
+        </div>
+        <div class="row" style="gap:8px; margin-top:8px; font-size:12px; color:var(--muted);">
+          <span>Example:</span>
+          <code>?progress=75&theme=violet&mode=countdown&start=2025-01-01T00:00&end=2025-12-31T23:59</code>
+        </div>
       </div>
     </div>
 
-    <div class="group" id="durationFields">
-      <div class="row" style="gap:8px;">
-        <span class="pill">Duration (s)</span>
-        <input class="control" type="number" id="durationSec" min="1" value="60">
-        <button class="control" id="durStart">Start</button>
-        <button class="control" id="durReset">Reset</button>
-      </div>
-      <div class="row" style="gap:8px; margin-top:10px;">
-        <span class="pill">Presets</span>
-        <button class="btn-chip" data-dur="30">30s</button>
-        <button class="btn-chip" data-dur="60">1m</button>
-        <button class="btn-chip" data-dur="300">5m</button>
-        <button class="btn-chip" data-dur="600">10m</button>
+    <!-- Controls tab content -->
+    <div id="tabControls" style="display:none;">
+      <div class="group">
+        <div class="row" style="gap:10px; justify-content:space-between;">
+          <button class="control" id="ctrlStart" title="Start / Resume">▶ Start</button>
+          <button class="control" id="ctrlPause" title="Pause">⏸ Pause</button>
+          <button class="control" id="ctrlStop"  title="Stop & Reset">⏹ Stop</button>
+        </div>
+        <div class="row" style="gap:8px; margin-top:10px; color:var(--muted); font-size:12px;">
+          <span>Behavior:</span>
+          <span>• Manual: Start = Auto, Pause = freeze, Stop = 0% & Manual</span>
+        </div>
       </div>
     </div>
-
-    <div class="group">
-      <div class="row" style="gap:8px;">
-        <span class="pill">Theme</span>
-        <select class="control" id="themeSelect">
-          <option value="cyan">Cyan</option>
-          <option value="magenta">Magenta</option>
-          <option value="amber">Amber</option>
-          <option value="lime">Lime</option>
-          <option value="violet">Violet</option>
-        </select>
-      </div>
     </div>
 
     <!-- New: Share / URL state -->
@@ -116,6 +151,78 @@
 
   <button class="fs-btn" id="fsBtn" title="Toggle Fullscreen">⤢ Fullscreen</button>
   <button class="clean-btn" id="cleanBtn" title="Hide/Show UI">🧹 Clean UI</button>
+
+  <script src="script.js"></script>
+  <!-- Controls tab wiring (kept tiny to avoid touching main script) -->
+  <script>
+    (function(){
+      const btnSettings = document.getElementById('tabBtnSettings');
+      const btnControls = document.getElementById('tabBtnControls');
+      const tabSettings = document.getElementById('tabSettings');
+      const tabControls = document.getElementById('tabControls');
+      const modeBar = document.getElementById('modeBar');
+      const startAt = document.getElementById('startAt');
+      const endAt = document.getElementById('endAt');
+      const durationSec = document.getElementById('durationSec');
+
+      function showTab(which){
+        const isSettings = which === 'settings';
+        tabSettings.style.display = isSettings ? 'block' : 'none';
+        tabControls.style.display = isSettings ? 'none' : 'block';
+        btnSettings.classList.toggle('pill', !isSettings);
+        btnControls.classList.toggle('pill', isSettings);
+      }
+      btnSettings && btnSettings.addEventListener('click', ()=> showTab('settings'));
+      btnControls && btnControls.addEventListener('click', ()=> showTab('controls'));
+
+      function currentMode(){
+        const r = modeBar.querySelector('input[name="mode"]:checked');
+        return r ? r.value : 'manual';
+      }
+
+      // Control buttons
+      const bStart = document.getElementById('ctrlStart');
+      const bPause = document.getElementById('ctrlPause');
+      const bStop  = document.getElementById('ctrlStop');
+
+      bStart && bStart.addEventListener('click', ()=>{
+        const m = currentMode();
+        if (m === 'manual') {
+          window.progressBar.play();
+        } else if (m === 'duration') {
+          window.progressBar.startDuration();
+        } else if (m === 'countdown') {
+          // if dates missing, set a quick 1h from now
+          if (!startAt.value) startAt.value = (function(d){const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;})(new Date());
+          if (!endAt.value) { const base = new Date(startAt.value); const end = new Date(base.getTime()+3600*1000); const p=n=>String(n).padStart(2,'0'); endAt.value = `${end.getFullYear()}-${p(end.getMonth()+1)}-${p(end.getDate())}T${p(end.getHours())}:${p(end.getMinutes())}`; }
+          window.progressBar.setMode('countdown');
+        }
+      });
+
+      bPause && bPause.addEventListener('click', ()=>{
+        const m = currentMode();
+        if (m === 'manual') {
+          window.progressBar.pause();
+        } else if (m === 'duration') {
+          window.progressBar.resetDuration();
+        } else if (m === 'countdown') {
+          // snapshot current percent and switch to manual to "freeze"
+          const t = document.getElementById('percent').textContent.replace('%','');
+          const val = Math.max(0, Math.min(100, parseFloat(t)||0));
+          window.progressBar.set(val);
+        }
+      });
+
+      bStop && bStop.addEventListener('click', ()=>{
+        window.progressBar.pause();
+        window.progressBar.set(0);
+        window.progressBar.setMode('manual');
+      });
+
+      // default to settings tab on load
+      showTab('settings');
+    })();
+  </script>
 
   <script src="script.js"></script>
 </body>
