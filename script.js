@@ -2,24 +2,22 @@
   // ---------- 0) URL sync plumbing ----------
   var urlSyncTimer = null;
   var initReady = false;
-  var suppressURLSync = false;
+  var suppressURLSync = false; // prevents URL sync while applying pasted URL
 
   function queueURLSync() {
-    // don't touch URL until app is ready, or while we're actively applying a pasted URL
     if (!initReady || suppressURLSync) return;
     clearTimeout(urlSyncTimer);
     urlSyncTimer = setTimeout(syncURLFromState, 200);
   }
-  
-  // Build a minimal URL that only includes the active mode's needed params
+
   function syncURLFromState() {
     if (!initReady || suppressURLSync) return;
-  
+
     const params = new URLSearchParams();
     // always keep theme + mode
     params.set('theme', themeSelect.value);
     params.set('mode', mode);
-  
+
     switch (mode) {
       case MODES.MANUAL: {
         const p = Math.round(target);
@@ -38,21 +36,21 @@
         break;
       }
     }
-  
+
     const search = params.toString();
     const newUrl = location.pathname + (search ? '?' + search : '');
     history.replaceState(null, '', newUrl);
-  
+
     if (urlExample) urlExample.value = location.href;
   }
-  
+
   // ---------- 1) Helpers ----------
   function clamp(v, min = 0, max = 100) {
     return Math.max(min, Math.min(max, v));
   }
 
   function formatRemaining(ms) {
-    const s = Math.ceil(ms/1000);
+    const s = Math.ceil(ms / 1000);
     const d = Math.floor(s / 86400);
     const h = Math.floor((s % 86400) / 3600);
     const m = Math.floor((s % 3600) / 60);
@@ -66,26 +64,26 @@
   }
 
   function toLocalISO(d) {
-    const pad = (n)=> String(n).padStart(2,'0');
+    const pad = (n) => String(n).padStart(2, '0');
     const y = d.getFullYear();
-    const mo = pad(d.getMonth()+1);
+    const mo = pad(d.getMonth() + 1);
     const da = pad(d.getDate());
     const h = pad(d.getHours());
     const mi = pad(d.getMinutes());
     return `${y}-${mo}-${da}T${h}:${mi}`;
   }
 
-  // ---------- 2) Parse QS ----------
+  // ---------- 2) Parse initial query ----------
   const qs = new URLSearchParams(location.search);
-  const qsTheme   = (qs.get('theme') || 'cyan').toLowerCase();
-  let qsMode      = (qs.get('mode') || '').toLowerCase();
-  const qsStart   = qs.get('start');
-  const qsEnd     = qs.get('end');
-  const qsChaotic = qs.get('chaotic');
-  const qsDuration= parseFloat(qs.get('duration'));
-  const qsProgress= clamp(parseFloat(qs.get('progress')), 0, 100);
+  const qsTheme    = (qs.get('theme') || 'cyan').toLowerCase();
+  let   qsMode     = (qs.get('mode')  || '').toLowerCase();
+  const qsStart    = qs.get('start');
+  const qsEnd      = qs.get('end');
+  const qsChaotic  = qs.get('chaotic');
+  const qsDuration = parseFloat(qs.get('duration'));
+  const qsProgress = clamp(parseFloat(qs.get('progress')), 0, 100);
 
-  // ---------- 3) DOM Refs ----------
+  // ---------- 3) DOM refs ----------
   const themeNameEl = document.getElementById('themeName');
   const themeSelect = document.getElementById('themeSelect');
   const barFill     = document.getElementById('barFill');
@@ -99,7 +97,6 @@
   const barWrap     = document.getElementById('barWrap');
   const hint        = document.getElementById('hint');
 
-  // drawer + settings
   const drawer         = document.getElementById('drawer');
   const drawerHandle   = document.getElementById('drawerHandle');
   const modeBar        = document.getElementById('modeBar');
@@ -115,14 +112,8 @@
   const qNowToCurrentEnd = document.getElementById('qNowToCurrentEnd');
   const urlExample     = document.getElementById('urlExample');
 
-  // tabs & control buttons
   const tabBtnSettings = document.getElementById('tabBtnSettings');
-  const tabBtnControls = document.getElementById('tabBtnControls');
   const tabSettings    = document.getElementById('tabSettings');
-  const tabControls    = document.getElementById('tabControls');
-  const ctrlStart      = document.getElementById('ctrlStart');
-  const ctrlPause      = document.getElementById('ctrlPause');
-  const ctrlStop       = document.getElementById('ctrlStop');
 
   // ---------- 4) Theme ----------
   function applyTheme(t) {
@@ -131,16 +122,18 @@
     themeSelect.value = t;
     queueURLSync();
   }
-  if (['cyan','magenta','amber','lime','violet'].includes(qsTheme)) {
+
+  if (['cyan', 'magenta', 'amber', 'lime', 'violet'].includes(qsTheme)) {
     applyTheme(qsTheme);
   } else {
     applyTheme('cyan');
   }
-  themeSelect.addEventListener('change', e => applyTheme(e.target.value));
+
+  themeSelect.addEventListener('change', (e) => applyTheme(e.target.value));
 
   // ---------- 5) State ----------
-  const MODES = { MANUAL:'manual', COUNTDOWN:'countdown', DURATION:'duration' };
-  let mode   = MODES.MANUAL;
+  const MODES = { MANUAL: 'manual', COUNTDOWN: 'countdown', DURATION: 'duration' };
+  let mode = MODES.MANUAL;
   let progress = !Number.isNaN(qsProgress) ? qsProgress : 0;
   let target   = progress;
   let auto     = false;
@@ -149,7 +142,7 @@
   let nextChaosAt  = 0;
 
   // ---------- 6) Infer mode & apply QS ----------
-  if (!['manual','countdown','duration'].includes(qsMode)) {
+  if (!['manual', 'countdown', 'duration'].includes(qsMode)) {
     if (qsStart || qsEnd) qsMode = MODES.COUNTDOWN;
     else if (!Number.isNaN(qsDuration)) qsMode = MODES.DURATION;
     else qsMode = MODES.MANUAL;
@@ -158,7 +151,7 @@
   function setMode(m) {
     mode = m;
     modeLabel.textContent = 'Mode: ' + m.charAt(0).toUpperCase() + m.slice(1);
-    statusEl.textContent  = auto ? 'auto' : m;
+    statusEl.textContent  = auto ? 'auto' : mode;
     if (countdownFields) countdownFields.style.display = (m === MODES.COUNTDOWN) ? 'block' : 'none';
     if (durationFields)  durationFields.style.display  = (m === MODES.DURATION)  ? 'block' : 'none';
     if (modeBar) {
@@ -167,66 +160,6 @@
     }
   }
 
-  // Helper to read current mode from radios
-  function currentMode() {
-    const r = modeBar.querySelector('input[name="mode"]:checked');
-    return r ? r.value : 'manual';
-  }
-  
-  // Keyboard-controlled transport
-  function doStart() {
-    const m = currentMode();
-    if (m === MODES.MANUAL) {
-      // manual: start auto animation
-      auto = true;
-      statusEl.textContent = 'auto';
-    } else if (m === MODES.DURATION) {
-      // duration: start (or restart) duration timer
-      durStartTime = performance.now();
-      setMode(MODES.DURATION);
-    } else if (m === MODES.COUNTDOWN) {
-      // countdown: ensure dates, default to +1h window if empty
-      if (!startAt.value) startAt.value = toLocalISO(new Date());
-      if (!endAt.value) {
-        const base = new Date(startAt.value);
-        const end  = new Date(base.getTime() + 3600*1000);
-        endAt.value = toLocalISO(end);
-      }
-      setMode(MODES.COUNTDOWN);
-    }
-    queueURLSync();
-  }
-  
-  function doPause() {
-    const m = currentMode();
-    if (m === MODES.MANUAL) {
-      auto = false;
-    } else if (m === MODES.DURATION) {
-      // stop duration timer but keep current percentage
-      durStartTime = null;
-    } else if (m === MODES.COUNTDOWN) {
-      // snapshot current % and freeze as manual
-      const txt = percentEl.textContent.replace('%','');
-      const val = clamp(parseFloat(txt) || 0);
-      target   = val;
-      progress = val;
-      setMode(MODES.MANUAL);
-    }
-    queueURLSync();
-  }
-  
-  function doStop() {
-    // stop everything, reset to 0% manual
-    auto = false;
-    progress = 0;
-    target   = 0;
-    durStartTime = null;
-    setMode(MODES.MANUAL);
-    render();
-    queueURLSync();
-  }
-
-  
   setMode(qsMode);
 
   if (qsStart) startAt.value = qsStart;
@@ -239,7 +172,7 @@
     target   = 0;
   }
 
-  // ---------- 7) Drawer & buttons ----------
+  // ---------- 7) Drawer & basic buttons ----------
   if (drawerHandle && drawer) {
     drawerHandle.addEventListener('click', () => {
       drawer.classList.toggle('open');
@@ -256,7 +189,9 @@
           await document.exitFullscreen();
           fsBtn.textContent = '⤢ Fullscreen';
         }
-      } catch (err) { console.warn(err); }
+      } catch (err) {
+        console.warn(err);
+      }
     });
   }
 
@@ -269,8 +204,13 @@
     });
   }
 
+  // Only Settings tab remains; ensure it's visible
+  if (tabSettings) tabSettings.style.display = 'block';
+  if (tabBtnSettings) tabBtnSettings.classList.add('tab-active');
+
+  // ---------- 8) Mode / inputs wiring ----------
   if (modeBar) {
-    modeBar.addEventListener('change', e => {
+    modeBar.addEventListener('change', (e) => {
       if (e.target.name === 'mode') {
         setMode(e.target.value);
         queueURLSync();
@@ -278,7 +218,7 @@
     });
   }
 
-  [startAt, endAt, durationSec].forEach(el => {
+  [startAt, endAt, durationSec].forEach((el) => {
     if (el) el.addEventListener('input', queueURLSync);
   });
   if (chaotic) {
@@ -292,6 +232,7 @@
       queueURLSync();
     });
   }
+
   if (durResetBtn) {
     durResetBtn.addEventListener('click', () => {
       durStartTime = null;
@@ -308,6 +249,7 @@
       queueURLSync();
     });
   }
+
   if (qNowToCurrentEnd) {
     qNowToCurrentEnd.addEventListener('click', () => {
       if (endAt.value) {
@@ -318,7 +260,7 @@
   }
 
   if (countdownFields) {
-    countdownFields.querySelectorAll('[data-end]').forEach(btn => {
+    countdownFields.querySelectorAll('[data-end]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const secs = parseInt(btn.getAttribute('data-end'), 10);
         const base = startAt.value ? new Date(startAt.value) : new Date();
@@ -330,7 +272,7 @@
   }
 
   if (durationFields) {
-    durationFields.querySelectorAll('[data-dur]').forEach(btn => {
+    durationFields.querySelectorAll('[data-dur]').forEach((btn) => {
       btn.addEventListener('click', () => {
         durationSec.value = btn.getAttribute('data-dur');
         queueURLSync();
@@ -340,90 +282,14 @@
 
   if (barWrap) {
     barWrap.addEventListener('click', () => {
-      if (mode === MODES.MANUAL) auto = !auto;
+      if (mode === MODES.MANUAL) {
+        auto = !auto;
+        statusEl.textContent = auto ? 'auto' : mode;
+      }
     });
   }
 
-  // ---------- 8) Keyboard ----------
-  window.addEventListener('keydown', (e) => {
-    // Space = toggle auto
-    if (e.code === 'Space') {
-      e.preventDefault();
-      auto = !auto;
-      statusEl.textContent = auto ? 'auto' : mode;
-      return;
-    }
-  
-    // H = toggle hide UI
-    if (e.key === 'h' || e.key === 'H') {
-      document.body.classList.toggle('clean');
-      if (cleanBtn) {
-        cleanBtn.textContent = document.body.classList.contains('clean')
-          ? '🧹 Show UI'
-          : '🧹 Clean UI';
-      }
-      return;
-    }
-  
-    // A/S/D = Start / Pause / Stop
-    if (e.key === 'a' || e.key === 'A') { doStart(); return; }
-    if (e.key === 's' || e.key === 'S') { doPause(); return; }
-    if (e.key === 'd' || e.key === 'D') { doStop();  return; }
-  
-    // Arrows = manual progress adjust
-    const step = e.shiftKey ? 5 : 1;
-    if (e.key === 'ArrowRight') {
-      target = clamp(target + step);
-      setMode(MODES.MANUAL);
-      auto = false;
-      queueURLSync();
-    }
-    if (e.key === 'ArrowLeft')  {
-      target = clamp(target - step);
-      setMode(MODES.MANUAL);
-      auto = false;
-      queueURLSync();
-    }
-  });
-
-    // H = toggle hide UI
-    if (e.key === 'h' || e.key === 'H') {document.body.classList.toggle('clean');
-      if (cleanBtn) {cleanBtn.textContent = document.body.classList.contains('clean')
-          ? '🧹 Show UI'
-          : '🧹 Clean UI';
-      }
-      return;
-    }
-
-    // arrows adjust manual progress
-    const step = e.shiftKey ? 5 : 1;
-    if (e.key === 'ArrowRight') {
-      target = clamp(target + step);
-      setMode(MODES.MANUAL);
-      auto = false;
-      queueURLSync();
-    }
-    if (e.key === 'ArrowLeft') {
-      target = clamp(target - step);
-      setMode(MODES.MANUAL);
-      auto = false;
-      queueURLSync();
-    }
-  });
-
-  // ---------- 9) Auto-hide floating UI (only fs + drawer) ----------
-  const floats = [fsBtn, drawerHandle].filter(Boolean);
-  let hideTimer;
-  function showBtn() {
-    floats.forEach(b => b.classList.remove('auto-hide'));
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(() => floats.forEach(b => b.classList.add('auto-hide')), 1800);
-  }
-  window.addEventListener('mousemove', showBtn);
-  window.addEventListener('touchstart', showBtn, { passive: true });
-  showBtn();
-
-  // ---------- 10) URL field: click-to-copy + paste-to-apply ----------
+  // ---------- 9) URL field: click-to-copy + paste-to-apply ----------
   if (urlExample) {
     urlExample.value = location.href;
 
@@ -432,9 +298,9 @@
       try {
         await navigator.clipboard.writeText(location.href);
         urlExample.style.boxShadow = '0 0 0 3px rgba(0,224,255,0.25)';
-        setTimeout(() => urlExample.style.boxShadow = '', 300);
+        setTimeout(() => (urlExample.style.boxShadow = ''), 300);
       } catch {
-        // fallback = selection active
+        // selection is active, user can Ctrl/Cmd+C
       }
     });
 
@@ -448,32 +314,31 @@
 
   function applyURLString(str) {
     try {
-      suppressURLSync = true;  // 🔒 freeze URL sync while we apply
-  
-      // Always parse against the current page, but ignore foreign paths
+      suppressURLSync = true; // freeze sync during apply
+
       const base = location.href;
       const url  = (str.startsWith('?') || !/^https?:/i.test(str))
-        ? new URL(str, base)   // query or relative
-        : new URL(str, base);  // absolute; we will only borrow its search params anyway
-  
+        ? new URL(str, base)
+        : new URL(str, base);
+
       const p = url.searchParams;
-  
-      // --- Theme ---
+
+      // Theme
       const t = (p.get('theme') || themeSelect.value).toLowerCase();
-      if (['cyan','magenta','amber','lime','violet'].includes(t)) {
-        applyTheme(t);   // applyTheme itself calls queueURLSync, but it's ignored while suppressURLSync=true
+      if (['cyan', 'magenta', 'amber', 'lime', 'violet'].includes(t)) {
+        applyTheme(t);
       }
-  
-      // --- Mode (explicit or inferred) ---
+
+      // Mode
       let m = (p.get('mode') || '').toLowerCase();
-      if (!['manual','countdown','duration'].includes(m)) {
-        if (p.get('start') || p.get('end'))  m = MODES.COUNTDOWN;
-        else if (p.has('duration'))          m = MODES.DURATION;
-        else                                 m = MODES.MANUAL;
+      if (!['manual', 'countdown', 'duration'].includes(m)) {
+        if (p.get('start') || p.get('end')) m = MODES.COUNTDOWN;
+        else if (p.has('duration'))         m = MODES.DURATION;
+        else                                m = MODES.MANUAL;
       }
       setMode(m);
-  
-      // --- Fields per mode ---
+
+      // Fields per mode
       if (m === MODES.MANUAL) {
         const pr = clamp(parseFloat(p.get('progress')), 0, 100);
         if (!Number.isNaN(pr)) {
@@ -490,33 +355,30 @@
         if (!Number.isNaN(d) && d > 0) durationSec.value = d;
         chaotic.checked = false;
       }
-  
-      // --- Keep *current* path, only change the query ---
+
+      // Keep current path, only change query
       const search = p.toString();
       const newUrl = location.pathname + (search ? '?' + search : '');
       history.replaceState(null, '', newUrl);
-  
+
       if (urlExample) urlExample.value = location.href;
-  
-      // ensure UI reflects new state immediately
       render();
     } catch (err) {
       console.warn('Invalid URL/query in Share field:', err);
     } finally {
-      suppressURLSync = false;  // 🔓 re-enable URL sync
+      suppressURLSync = false; // re-enable URL sync
     }
   }
 
-  
-  // ---------- 11) Progress / modes ----------
+  // ---------- 10) Countdown / Duration / Chaotic ----------
   function countdownProgress() {
     const s = startAt.value ? new Date(startAt.value) : null;
     const e = endAt.value   ? new Date(endAt.value)   : null;
     if (!s || !e || isNaN(s) || isNaN(e) || e <= s) return NaN;
     const now = new Date();
-    const total    = e - s;
-    const elapsed  = now - s;
-    const remaining= e - now;
+    const total     = e - s;
+    const elapsed   = now - s;
+    const remaining = e - now;
     const p = (elapsed / total) * 100;
     hint.textContent = remaining > 0
       ? formatRemaining(remaining) + ' remaining'
@@ -527,8 +389,8 @@
   function durationProgress() {
     const d = Math.max(1, parseFloat(durationSec.value || '0')) * 1000;
     if (!durStartTime) return null;
-    const now     = performance.now();
-    const elapsed = now - durStartTime;
+    const now       = performance.now();
+    const elapsed   = now - durStartTime;
     const remaining = Math.max(0, d - elapsed);
     hint.textContent = formatRemaining(remaining) + ' remaining';
     return (elapsed / d) * 100;
@@ -552,7 +414,116 @@
     if (urlExample && !urlSyncTimer) urlExample.value = location.href;
   }
 
-  // ---------- 13) Main loop ----------
+  // ---------- 11) Current mode helper + A/S/D actions ----------
+  function currentMode() {
+    if (!modeBar) return mode;
+    const r = modeBar.querySelector('input[name="mode"]:checked');
+    return r ? r.value : mode;
+  }
+
+  function doStart() {
+    const m = currentMode();
+    if (m === MODES.MANUAL) {
+      auto = true;
+      statusEl.textContent = 'auto';
+    } else if (m === MODES.DURATION) {
+      durStartTime = performance.now();
+      setMode(MODES.DURATION);
+    } else if (m === MODES.COUNTDOWN) {
+      if (!startAt.value) startAt.value = toLocalISO(new Date());
+      if (!endAt.value) {
+        const base = new Date(startAt.value);
+        const end  = new Date(base.getTime() + 3600 * 1000);
+        endAt.value = toLocalISO(end);
+      }
+      setMode(MODES.COUNTDOWN);
+    }
+    queueURLSync();
+  }
+
+  function doPause() {
+    const m = currentMode();
+    if (m === MODES.MANUAL) {
+      auto = false;
+    } else if (m === MODES.DURATION) {
+      durStartTime = null;
+    } else if (m === MODES.COUNTDOWN) {
+      const txt = percentEl.textContent.replace('%', '');
+      const val = clamp(parseFloat(txt) || 0);
+      target   = val;
+      progress = val;
+      setMode(MODES.MANUAL);
+    }
+    queueURLSync();
+  }
+
+  function doStop() {
+    auto = false;
+    progress = 0;
+    target   = 0;
+    durStartTime = null;
+    setMode(MODES.MANUAL);
+    render();
+    queueURLSync();
+  }
+
+  // ---------- 12) Keyboard ----------
+  window.addEventListener('keydown', (e) => {
+    // Space = toggle auto (manual only)
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (mode === MODES.MANUAL) {
+        auto = !auto;
+        statusEl.textContent = auto ? 'auto' : mode;
+      }
+      return;
+    }
+
+    // H = toggle hide UI
+    if (e.key === 'h' || e.key === 'H') {
+      document.body.classList.toggle('clean');
+      if (cleanBtn) {
+        cleanBtn.textContent = document.body.classList.contains('clean')
+          ? '🧹 Show UI'
+          : '🧹 Clean UI';
+      }
+      return;
+    }
+
+    // A/S/D = Start / Pause / Stop
+    if (e.key === 'a' || e.key === 'A') { doStart(); return; }
+    if (e.key === 's' || e.key === 'S') { doPause(); return; }
+    if (e.key === 'd' || e.key === 'D') { doStop();  return; }
+
+    // Arrows = manual progress adjust
+    const step = e.shiftKey ? 5 : 1;
+    if (e.key === 'ArrowRight') {
+      target = clamp(target + step);
+      setMode(MODES.MANUAL);
+      auto = false;
+      queueURLSync();
+    }
+    if (e.key === 'ArrowLeft') {
+      target = clamp(target - step);
+      setMode(MODES.MANUAL);
+      auto = false;
+      queueURLSync();
+    }
+  });
+
+  // ---------- 13) Auto-hide floating buttons ----------
+  const floats = [fsBtn, drawerHandle].filter(Boolean);
+  let hideTimer;
+  function showBtn() {
+    floats.forEach((b) => b.classList.remove('auto-hide'));
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => floats.forEach((b) => b.classList.add('auto-hide')), 1800);
+  }
+  window.addEventListener('mousemove', showBtn);
+  window.addEventListener('touchstart', showBtn, { passive: true });
+  showBtn();
+
+  // ---------- 14) Main loop ----------
   function tick(now) {
     const dt = Math.min(33, now - last) / 1000;
     last = now;
@@ -586,7 +557,7 @@
     }
   }, 800);
 
-  // ---------- 14) Public API ----------
+  // ---------- 15) Public API ----------
   window.progressBar = {
     set: (v) => {
       target = clamp(v);
@@ -595,9 +566,18 @@
       queueURLSync();
     },
     get: () => target,
-    play: () => { auto = true; statusEl.textContent = 'auto'; },
-    pause: () => { auto = false; statusEl.textContent = mode; },
-    setMode: (m) => { setMode(m); queueURLSync(); },
+    play: () => {
+      auto = true;
+      statusEl.textContent = 'auto';
+    },
+    pause: () => {
+      auto = false;
+      statusEl.textContent = mode;
+    },
+    setMode: (m) => {
+      setMode(m);
+      queueURLSync();
+    },
     startDuration: () => {
       durStartTime = performance.now();
       setMode(MODES.DURATION);
@@ -610,8 +590,7 @@
     MODES
   };
 
-  // ---------- 15) Init + Self-tests ----------
-  setMode(mode);
+  // ---------- 16) Init ----------
   target = progress;
   render();
   requestAnimationFrame(tick);
