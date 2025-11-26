@@ -73,10 +73,9 @@
     </div>
 
     <!-- Tabs header -->
-    <div class="row" style="gap:8px; margin-bottom:10px;">
-      <button class="btn-chip tab-btn tab-active" data-tab="settings" id="tabBtnSettings">Settings</button>
-      <button class="btn-chip tab-btn" data-tab="controls" id="tabBtnControls">Controls</button>
-    </div>
+  <div class="row" style="gap:8px; margin-bottom:10px;">
+    <button class="btn-chip tab-btn tab-active" id="tabBtnSettings">Settings</button>
+  </div>
 
     <!-- Settings tab -->
     <div id="tabSettings">
@@ -170,21 +169,6 @@
         <div class="row" style="gap:8px; margin-top:8px; font-size:12px; color:var(--muted);">
           <span>Example:</span>
           <code>?progress=75&theme=violet&mode=countdown&start=2025-01-01T00:00&end=2025-12-31T23:59</code>
-        </div>
-      </div>
-    </div>
-
-    <!-- Controls tab -->
-    <div id="tabControls" style="display:none;">
-      <div class="group">
-        <div class="row" style="gap:10px; justify-content:space-between;">
-          <button class="control" id="ctrlStart" title="Start / Resume">▶ Start</button>
-          <button class="control" id="ctrlPause" title="Pause">⏸ Pause</button>
-          <button class="control" id="ctrlStop"  title="Stop & Reset">⏹ Stop</button>
-        </div>
-        <div class="row" style="gap:8px; margin-top:10px; color:var(--muted); font-size:12px;">
-          <span>Behavior:</span>
-          <span>• Manual: Start = auto, Pause = freeze, Stop = 0% & Manual</span>
         </div>
       </div>
     </div>
