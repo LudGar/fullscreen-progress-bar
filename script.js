@@ -618,5 +618,4 @@
 
   initReady = true;
   queueURLSync();
-  
-)();
+})();
