@@ -346,19 +346,49 @@
 
   // ---------- 8) Keyboard ----------
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') { ... }
-    if (e.key === 'h' || e.key === 'H') { ... }
+    // Space = toggle auto
+    if (e.code === 'Space') {
+      e.preventDefault();
+      auto = !auto;
+      statusEl.textContent = auto ? 'auto' : mode;
+      return;
+    }
   
-    const step = e.shiftKey ? 5 : 1;
-    if (e.key === 'ArrowRight') { ... }
-    if (e.key === 'ArrowLeft')  { ... }
-  });
-
     // H = toggle hide UI
     if (e.key === 'h' || e.key === 'H') {
       document.body.classList.toggle('clean');
       if (cleanBtn) {
         cleanBtn.textContent = document.body.classList.contains('clean')
+          ? '🧹 Show UI'
+          : '🧹 Clean UI';
+      }
+      return;
+    }
+  
+    // A/S/D = Start / Pause / Stop
+    if (e.key === 'a' || e.key === 'A') { doStart(); return; }
+    if (e.key === 's' || e.key === 'S') { doPause(); return; }
+    if (e.key === 'd' || e.key === 'D') { doStop();  return; }
+  
+    // Arrows = manual progress adjust
+    const step = e.shiftKey ? 5 : 1;
+    if (e.key === 'ArrowRight') {
+      target = clamp(target + step);
+      setMode(MODES.MANUAL);
+      auto = false;
+      queueURLSync();
+    }
+    if (e.key === 'ArrowLeft')  {
+      target = clamp(target - step);
+      setMode(MODES.MANUAL);
+      auto = false;
+      queueURLSync();
+    }
+  });
+
+    // H = toggle hide UI
+    if (e.key === 'h' || e.key === 'H') {document.body.classList.toggle('clean');
+      if (cleanBtn) {cleanBtn.textContent = document.body.classList.contains('clean')
           ? '🧹 Show UI'
           : '🧹 Clean UI';
       }
