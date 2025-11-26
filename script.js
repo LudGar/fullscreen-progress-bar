@@ -552,75 +552,6 @@
     if (urlExample && !urlSyncTimer) urlExample.value = location.href;
   }
 
-  // ---------- 12) Tabs + Controls ----------
-  function showTab(which) {
-    const isSettings = which === 'settings';
-    if (tabSettings) tabSettings.style.display = isSettings ? 'block' : 'none';
-    if (tabControls) tabControls.style.display = isSettings ? 'none' : 'block';
-
-    if (tabBtnSettings) tabBtnSettings.classList.toggle('tab-active', isSettings);
-    if (tabBtnControls) tabBtnControls.classList.toggle('tab-active', !isSettings);
-  }
-
-  if (tabBtnSettings && tabBtnControls) {
-    tabBtnSettings.addEventListener('click', () => showTab('settings'));
-    tabBtnControls.addEventListener('click', () => showTab('controls'));
-  }
-
-  if (ctrlStart) {
-    ctrlStart.addEventListener('click', () => {
-      const m = currentMode();
-      if (m === 'manual') {
-        auto = true;
-        statusEl.textContent = 'auto';
-      } else if (m === 'duration') {
-        durStartTime = performance.now();
-        setMode(MODES.DURATION);
-      } else if (m === 'countdown') {
-        if (!startAt.value) startAt.value = toLocalISO(new Date());
-        if (!endAt.value) {
-          const base = new Date(startAt.value);
-          const end  = new Date(base.getTime() + 3600*1000);
-          endAt.value = toLocalISO(end);
-        }
-        setMode(MODES.COUNTDOWN);
-      }
-      queueURLSync();
-    });
-  }
-
-  if (ctrlPause) {
-    ctrlPause.addEventListener('click', () => {
-      const m = currentMode();
-      if (m === 'manual') {
-        auto = false;
-      } else if (m === 'duration') {
-        durStartTime = null;
-      } else if (m === 'countdown') {
-        const txt = percentEl.textContent.replace('%','');
-        const val = clamp(parseFloat(txt) || 0);
-        target   = val;
-        progress = val;
-        setMode(MODES.MANUAL);
-      }
-      queueURLSync();
-    });
-  }
-
-  if (ctrlStop) {
-    ctrlStop.addEventListener('click', () => {
-      auto = false;
-      progress = 0;
-      target   = 0;
-      durStartTime = null;
-      setMode(MODES.MANUAL);
-      render();
-      queueURLSync();
-    });
-  }
-
-  showTab('settings');
-
   // ---------- 13) Main loop ----------
   function tick(now) {
     const dt = Math.min(33, now - last) / 1000;
@@ -688,4 +619,4 @@
   initReady = true;
   queueURLSync();
   
-})();
+)();
