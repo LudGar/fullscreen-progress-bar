@@ -167,6 +167,66 @@
     }
   }
 
+  // Helper to read current mode from radios
+  function currentMode() {
+    const r = modeBar.querySelector('input[name="mode"]:checked');
+    return r ? r.value : 'manual';
+  }
+  
+  // Keyboard-controlled transport
+  function doStart() {
+    const m = currentMode();
+    if (m === MODES.MANUAL) {
+      // manual: start auto animation
+      auto = true;
+      statusEl.textContent = 'auto';
+    } else if (m === MODES.DURATION) {
+      // duration: start (or restart) duration timer
+      durStartTime = performance.now();
+      setMode(MODES.DURATION);
+    } else if (m === MODES.COUNTDOWN) {
+      // countdown: ensure dates, default to +1h window if empty
+      if (!startAt.value) startAt.value = toLocalISO(new Date());
+      if (!endAt.value) {
+        const base = new Date(startAt.value);
+        const end  = new Date(base.getTime() + 3600*1000);
+        endAt.value = toLocalISO(end);
+      }
+      setMode(MODES.COUNTDOWN);
+    }
+    queueURLSync();
+  }
+  
+  function doPause() {
+    const m = currentMode();
+    if (m === MODES.MANUAL) {
+      auto = false;
+    } else if (m === MODES.DURATION) {
+      // stop duration timer but keep current percentage
+      durStartTime = null;
+    } else if (m === MODES.COUNTDOWN) {
+      // snapshot current % and freeze as manual
+      const txt = percentEl.textContent.replace('%','');
+      const val = clamp(parseFloat(txt) || 0);
+      target   = val;
+      progress = val;
+      setMode(MODES.MANUAL);
+    }
+    queueURLSync();
+  }
+  
+  function doStop() {
+    // stop everything, reset to 0% manual
+    auto = false;
+    progress = 0;
+    target   = 0;
+    durStartTime = null;
+    setMode(MODES.MANUAL);
+    render();
+    queueURLSync();
+  }
+
+  
   setMode(qsMode);
 
   if (qsStart) startAt.value = qsStart;
@@ -286,13 +346,13 @@
 
   // ---------- 8) Keyboard ----------
   window.addEventListener('keydown', (e) => {
-    // Space = toggle auto
-    if (e.code === 'Space') {
-      e.preventDefault();
-      auto = !auto;
-      statusEl.textContent = auto ? 'auto' : mode;
-      return;
-    }
+    if (e.code === 'Space') { ... }
+    if (e.key === 'h' || e.key === 'H') { ... }
+  
+    const step = e.shiftKey ? 5 : 1;
+    if (e.key === 'ArrowRight') { ... }
+    if (e.key === 'ArrowLeft')  { ... }
+  });
 
     // H = toggle hide UI
     if (e.key === 'h' || e.key === 'H') {
@@ -475,11 +535,6 @@
   if (tabBtnSettings && tabBtnControls) {
     tabBtnSettings.addEventListener('click', () => showTab('settings'));
     tabBtnControls.addEventListener('click', () => showTab('controls'));
-  }
-
-  function currentMode() {
-    const r = modeBar.querySelector('input[name="mode"]:checked');
-    return r ? r.value : 'manual';
   }
 
   if (ctrlStart) {
